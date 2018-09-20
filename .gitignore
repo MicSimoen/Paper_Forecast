@@ -1,0 +1,5 @@
+.pioenvs
+.piolibdeps
+.vscode
+resources
+src/owm_credentials2.h
