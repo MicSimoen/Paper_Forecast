@@ -240,13 +240,13 @@ void EPD_WaveShare42BC::DisplayFrame(const unsigned char* frame_buffer) {
             SendData(reverse(frame_buffer[i]));
         }
         DelayMs(2);*/
-        SendCommand(DATA_START_TRANSMISSION_1);
+        SendCommand(DATA_START_TRANSMISSION_2);
         DelayMs(2);
         for(int i = 0; i < width / 8 * height; i++) {
             SendData(0xFF);      // bit set: white, bit reset: black
         }
         DelayMs(2);
-        SendCommand(DATA_START_TRANSMISSION_2);
+        SendCommand(DATA_START_TRANSMISSION_1);
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < (width) / 8; j++) {
 
@@ -281,8 +281,6 @@ void EPD_WaveShare42BC::DisplayFrame(const unsigned char* frame_buffer) {
             }
         }
     }
-
-    SetLut();
 
     SendCommand(DISPLAY_REFRESH);
     DelayMs(100);
