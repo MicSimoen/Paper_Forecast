@@ -171,33 +171,38 @@ void StopWiFi() {
   wifisection    = millis() - wifisection;
 }
 //#########################################################################################
-void SetupTime() {
-  configTime(0, 0, "0.uk.pool.ntp.org", "time.nist.gov");
-  //setenv("TZ", TIMEZONE, 1);
-  delay(500);
-  //UpdateLocalTime();
+void UpdateLocalTime() {
+    struct tm *timeinfo;
+
+    time_t now = time(nullptr);
+    timeinfo = localtime (&now);
+
+    //See http://www.cplusplus.com/reference/ctime/strftime/
+    //Serial.println(timeinfo, "%a %b %d %Y   %H:%M:%S");     // Displays: Saturday, June 24 2017 14:05:49
+    //Serial.println(&timeinfo, "%H:%M:%S");                     // Displays: 14:05:49
+    char output[30], day_output[30];
+    if (UNITS == "M") {
+        strftime(day_output, 30, "%a  %d-%b-%y", timeinfo);     // Displays: Sat 24-Jun-17
+        strftime(output, 30, "(@ %H:%M:%S )", timeinfo);        // Creates: '@ 14:05:49'
+    }
+    else {
+        strftime(day_output, 30, "%a  %b-%d-%y", timeinfo);     // Creates: Sat Jun-24-17
+        strftime(output, 30, "(@ %r )", timeinfo);              // Creates: '@ 2:05:49pm'
+    }
+    Day_time_str = day_output;
+    time_str     = output;
 }
 //#########################################################################################
-/* void UpdateLocalTime() {
-  struct tm timeinfo;
-  while (!getLocalTime(&timeinfo)) {
-    Serial.println(F("Failed to obtain time"));
+void SetupTime() {
+  configTime(7200, 3600, "0.se.pool.ntp.org", "0.europe.pool.ntp.org", "time.nist.gov");
+  //setenv("TZ", TIMEZONE, 1);
+  while (!time(nullptr)) {
+    Serial.print(".");
+    delay(1000);
   }
-  //See http://www.cplusplus.com/reference/ctime/strftime/
-  Serial.println(&timeinfo, "%a %b %d %Y   %H:%M:%S");     // Displays: Saturday, June 24 2017 14:05:49
-  //Serial.println(&timeinfo, "%H:%M:%S");                     // Displays: 14:05:49
-  char output[30], day_output[30];
-  if (UNITS == "M") {
-    strftime(day_output, 30, "%a  %d-%b-%y", &timeinfo);     // Displays: Sat 24-Jun-17
-    strftime(output, 30, "(@ %H:%M:%S )", &timeinfo);        // Creates: '@ 14:05:49'
-  }
-  else {
-    strftime(day_output, 30, "%a  %b-%d-%y", &timeinfo);     // Creates: Sat Jun-24-17
-    strftime(output, 30, "(@ %r )", &timeinfo);              // Creates: '@ 2:05:49pm'
-  }
-  Day_time_str = day_output;
-  time_str     = output;
-} */
+  Serial.println("NTP Time Received!");
+  UpdateLocalTime();
+}
 //#########################################################################################
 bool obtain_wx_data(String RequestType) {
   rxtext = "";
@@ -207,9 +212,11 @@ bool obtain_wx_data(String RequestType) {
     // Serial.println("connecting...");
     // send the HTTP PUT request:
     if (RequestType == "weather")
-      client.println("GET /data/2.5/" + RequestType + "?q=" + CITY + "," + COUNTRY + "&APPID=" + apikey + "&mode=json&units="+units+"&lang="+LANGUAGE+" HTTP/1.1");
+      client.println("GET /data/2.5/" + RequestType + "?q=" + CITY + "," + COUNTRY + "&APPID=" + 
+      apikey + "&mode=json&units="+units+"&lang="+LANGUAGE+" HTTP/1.1");
     else
-      client.println("GET /data/2.5/" + RequestType + "?q=" + CITY + "," + COUNTRY + "&APPID=" + apikey + "&mode=json&units="+units+"&lang="+LANGUAGE+"&cnt=24 HTTP/1.1");
+      client.println("GET /data/2.5/" + RequestType + "?q=" + CITY + "," + COUNTRY + "&APPID=" + 
+      apikey + "&mode=json&units="+units+"&lang="+LANGUAGE+"&cnt=12 HTTP/1.1");
     client.println("Host: api.openweathermap.org");
     client.println("User-Agent: ESP OWM Receiver/1.1");
     client.println("Connection: close");
@@ -255,6 +262,7 @@ void setup() {
     Draw_Manager.Commit();
     delay(2000);
   }
+  UpdateLocalTime();
   Serial.println(F("Starting deep-sleep period..."));
   begin_sleep();
 }

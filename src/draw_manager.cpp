@@ -34,19 +34,67 @@ void draw_manager::Commit(void){
 void draw_manager::Draw_Heading_Section(String Day_time_str, String time_str) {
     gfx->setFont(ArialRoundedMTBold_14);
     gfx->setTextAlignment(TEXT_ALIGN_CENTER);
-    gfx->drawString(screen_width / 2, -2, CITY);
+    gfx->drawString(screen_width / 2, -3, CITY);
     gfx->setFont(ArialMT_Plain_10);
     gfx->setTextAlignment(TEXT_ALIGN_RIGHT);
-    gfx->drawString(screen_width-3, 0, Day_time_str);
+    gfx->drawString(screen_width-3, 0, time_str);
     gfx->setTextAlignment(TEXT_ALIGN_LEFT);
-    gfx->drawString(5, 0, time_str);
+    gfx->drawString(5, 0, Day_time_str);
     gfx->drawLine(0, 15, screen_width, 15);
+}
+//#########################################################################################
+void draw_manager::Draw_Wind_Section(int x, int y, float angle, float windspeed) {
+    int Cradius = 44;
+
+    gfx->drawRect(x-65, y-80, 130, 140);
+
+    gfx->setTextAlignment(TEXT_ALIGN_CENTER);
+    gfx->setFont(ArialRoundedMTBold_14);
+    gfx->drawString(x, y -79, "Wind");
+    gfx->drawLine(x-65, y-60, x+65, y-60);
+    
+    gfx->drawCircle(x, y, Cradius -1);
+    gfx->drawCircle(x, y, Cradius);
+    float i;
+    float x_pos, y_pos, x_start, y_start, x_end, y_end;
+    gfx->setTextAlignment(TEXT_ALIGN_CENTER);
+    gfx->setFont(ArialMT_Plain_10);
+    for(i=0; i<360; i+=45) {
+        x_pos = (Cradius + 9) * cos((i - 90) * PI / 180) + x; // calculate X position
+        y_pos = (Cradius + 9) * sin((i - 90) * PI / 180) + y - 6; // calculate Y position
+        gfx->drawString(x_pos, y_pos, utils::WindDegToDirection(i));
+        x_start = (Cradius - 7) * cos((i - 90) * PI / 180) + x; // calculate X position
+        y_start = (Cradius - 7) * sin((i - 90) * PI / 180) + y; // calculate Y position
+        x_end = (Cradius - 12) * cos((i - 90) * PI / 180) + x; // calculate X position
+        y_end = (Cradius - 12) * sin((i - 90) * PI / 180) + y; // calculate Y position
+        gfx->drawLine(x_start, y_start, x_end, y_end);
+    }
+
+    arrow(x, y, Cradius - 12, angle, 5, 10); // Show wind direction on outer circle
+    gfx->setTextAlignment(TEXT_ALIGN_CENTER);
+    gfx->setFont(ArialRoundedMTBold_14);
+    gfx->drawString(x, y - 24, String(round(angle))+"°");
+    gfx->drawString(x, y -9, String(windspeed,1) + (UNITS == "M" ? " m/s" : " mph"));
+    gfx->drawString(x, y + 6, utils::WindDegToDirection(angle));
+    
+}
+//#########################################################################################
+void draw_manager::Draw_Condition_Section(int x, int y, String IconName) {
+    gfx->drawRect(x-45, y-80, 90, 140);
+
+    gfx->setTextAlignment(TEXT_ALIGN_CENTER);
+    gfx->setFont(ArialRoundedMTBold_14);
+    gfx->drawString(x, y -79, "Condition");
+    gfx->drawLine(x-45, y-60, x+45, y-60);
+    
+    DisplayWXicon(x, y+10, IconName, MAIN_WEATHER_LARGE_ICON);
+    
 }
 //#########################################################################################
 void draw_manager::Draw_Main_Weather_Section(int x,
                                              int y,
                                              Forecast_record_type *WxConditions) {
-    DisplayWXicon(x+5, y-5, WxConditions[0].Icon, MAIN_WEATHER_LARGE_ICON);
+    /* DisplayWXicon(x+5, y-5, WxConditions[0].Icon, MAIN_WEATHER_LARGE_ICON);
     gfx->setFont(ArialRoundedMTBold_14);
     DrawPressureTrend(x, y + 50, WxConditions[0].Pressure, WxConditions[0].Trend);
     gfx->setTextAlignment(TEXT_ALIGN_CENTER);
@@ -65,7 +113,9 @@ void draw_manager::Draw_Main_Weather_Section(int x,
     }
     gfx->drawString(x - 170, y + 70, utils::TitleCase(Wx_Description));
     Draw_Main_Wx(x -98, y - 1, WxConditions);
-    gfx->drawLine(0, y + 68, screen_width, y + 68);
+    gfx->drawLine(0, y + 68, screen_width, y + 68); */
+    Draw_Wind_Section(65, 95, WxConditions[0].Winddir, WxConditions[0].Windspeed);
+    Draw_Condition_Section(175, 95, WxConditions[0].Icon);
 }
 //#########################################################################################
 void draw_manager::Draw_Forecast_Section(int x,
@@ -261,19 +311,15 @@ void draw_manager::DrawCircle(int x, int y, int Cstart, int Cend, int Cradius, i
 }
 //#########################################################################################
 void draw_manager::arrow(int x, int y, int asize, float aangle, int pwidth, int plength) {
-  float dx = (asize - 10) * cos((aangle - 90) * PI / 180) + x; // calculate X position
-  float dy = (asize - 10) * sin((aangle - 90) * PI / 180) + y; // calculate Y position
-  float x1 = 0;         float y1 = plength;
-  float x2 = pwidth / 2;  float y2 = pwidth / 2;
-  float x3 = -pwidth / 2; float y3 = pwidth / 2;
-  float angle = aangle * PI / 180 - 135;
-  float xx1 = x1 * cos(angle) - y1 * sin(angle) + dx;
-  float yy1 = y1 * cos(angle) + x1 * sin(angle) + dy;
-  float xx2 = x2 * cos(angle) - y2 * sin(angle) + dx;
-  float yy2 = y2 * cos(angle) + x2 * sin(angle) + dy;
-  float xx3 = x3 * cos(angle) - y3 * sin(angle) + dx;
-  float yy3 = y3 * cos(angle) + x3 * sin(angle) + dy;
-  gfx->fillTriangle(xx1, yy1, xx3, yy3, xx2, yy2);
+    float dx = asize * cos((aangle - 90) * PI / 180) + x; // calculate X position
+    float dy = asize * sin((aangle - 90) * PI / 180) + y; // calculate Y position
+    float xx1 = plength * cos((aangle - 90) * PI / 180) + dx;
+    float yy1 = plength * sin((aangle - 90) * PI / 180) + dy;
+    float xx2 = pwidth * cos(aangle * PI / 180) + dx;
+    float yy2 = pwidth * sin(aangle * PI / 180) + dy;
+    float xx3 = pwidth * cos((aangle - 180) * PI / 180) + dx;
+    float yy3 = pwidth * sin((aangle - 180) * PI / 180) + dy;
+    gfx->fillTriangle(xx1, yy1, xx3, yy3, xx2, yy2);
 }
 //#########################################################################################
 void draw_manager::DisplayWXicon(int x, int y, String IconName, bool LargeSize) {
@@ -519,9 +565,13 @@ void draw_manager::Haze(int x, int y, bool LargeSize, String IconName) {
 //#########################################################################################
 void draw_manager::addmoon (int x, int y, int scale){
   if (scale == LARGE) {
-    gfx->fillCircle(x-37,y-33,scale);
+    /*gfx->fillCircle(x-37,y-33,scale);
     gfx->setColor(EPD_WHITE);
     gfx->fillCircle(x-27,y-33,scale*1.6);
+    gfx->setColor(EPD_BLACK);*/
+    gfx->fillCircle(x-32,y-47,scale*0.7);
+    gfx->setColor(EPD_WHITE);
+    gfx->fillCircle(x-22,y-47,scale*1.12);
     gfx->setColor(EPD_BLACK);
   }
   else
@@ -576,62 +626,79 @@ void draw_manager::DrawBattery(int x, int y) {
 void draw_manager::DrawGraph(int x_pos, int y_pos, int gwidth, int gheight,
                              float Y1Min, float Y1Max, String title, float *DataArray,
                              int readings, bool auto_scale, bool barchart_mode) {
-#define auto_scale_margin 0 // Sets the autoscale increment, so axis steps up in units of e.g. 3
-#define y_minor_axis 5      // 5 y-axis division markers
-  int maxYscale = -10000;
-  int minYscale =  10000;
-  int last_x, last_y;
-  float x1, y1, x2, y2;
-  if (auto_scale == true) {
-    for (int i = 1; i < readings; i++ ) {
-      if (DataArray[i] >= maxYscale) maxYscale = DataArray[i];
-      if (DataArray[i] <= minYscale) minYscale = DataArray[i];
+    #define auto_scale_margin 0 // Sets the autoscale increment, so axis steps up in units of e.g. 3
+    #define y_minor_axis 5      // 5 y-axis division markers
+    int maxYscale = -10000;
+    int minYscale =  10000;
+    int last_x, last_y;
+    float x1, y1, x2, y2;
+    if (auto_scale == true) {
+        for (int i = 1; i < readings; i++ ) {
+            if (DataArray[i] >= maxYscale) maxYscale = DataArray[i];
+            if (DataArray[i] <= minYscale) minYscale = DataArray[i];
+        }
+        // Auto scale the graph and round to the nearest value defined, default was Y1Max
+        maxYscale = round(maxYscale + auto_scale_margin); 
+        Y1Max = round(maxYscale+0.5);
+        if (minYscale != 0) {
+            // Auto scale the graph and round to the nearest value defined, default was Y1Min
+            minYscale = round(minYscale - auto_scale_margin);
+        }
+        Y1Min = round(minYscale);
     }
-    maxYscale = round(maxYscale + auto_scale_margin); // Auto scale the graph and round to the nearest value defined, default was Y1Max
-    Y1Max = round(maxYscale+0.5);
-    if (minYscale != 0) minYscale = round(minYscale - auto_scale_margin); // Auto scale the graph and round to the nearest value defined, default was Y1Min
-    Y1Min = round(minYscale);
-  }
-  // Draw the graph
-  last_x = x_pos + 1;
-  last_y = y_pos + (Y1Max - constrain(DataArray[1], Y1Min, Y1Max)) / (Y1Max - Y1Min) * gheight;
-  gfx->setColor(EPD_BLACK);
-  gfx->drawRect(x_pos, y_pos, gwidth + 3, gheight + 2);
-  gfx->setFont(ArialMT_Plain_10);
-  //gfx->setFont(ArialRoundedMTBold_14);
-  gfx->setTextAlignment(TEXT_ALIGN_CENTER);
-  gfx->drawString(x_pos + gwidth / 2, y_pos - 17, title);
-  gfx->setFont(ArialMT_Plain_10);
-  gfx->setTextAlignment(TEXT_ALIGN_RIGHT);
-  // Draw the data
-  for (int gx = 1; gx < readings; gx++) {
-      x1 = last_x;
-      y1 = last_y;
-      x2 = x_pos + gx * gwidth/(readings-1)-1 ; // MAX_READINGS is the global variable that sets the maximum data that can be plotted
-      y2 = y_pos + (Y1Max - constrain(DataArray[gx], Y1Min, Y1Max)) / (Y1Max - Y1Min) * gheight + 1;
-      if (barchart_mode) {
-        gfx->fillRect(x2, y2, (gwidth/readings)-1, y_pos + gheight - y2 + 1);
-      } else {
-        gfx->drawLine(last_x, last_y, x2, y2);
-      }
-      last_x = x2;
-      last_y = y2;
-  }
-  //Draw the Y-axis scale
-  for (int spacing = 0; spacing <= y_minor_axis; spacing++) {
-  #define number_of_dashes 20
-    for (int j = 0; j < number_of_dashes; j++) { // Draw dashed graph grid lines
-      if (spacing < y_minor_axis) gfx->drawHorizontalLine((x_pos + 3 + j * gwidth / number_of_dashes), y_pos + (gheight * spacing / y_minor_axis), gwidth / (2 * number_of_dashes));
+    // Draw the graph
+    last_x = x_pos + 1;
+    last_y = y_pos + (Y1Max - constrain(DataArray[1], Y1Min, Y1Max)) / (Y1Max - Y1Min) * gheight;
+    gfx->setColor(EPD_BLACK);
+    gfx->drawRect(x_pos, y_pos, gwidth + 3, gheight + 2);
+    gfx->setFont(ArialMT_Plain_10);
+    //gfx->setFont(ArialRoundedMTBold_14);
+    gfx->setTextAlignment(TEXT_ALIGN_CENTER);
+    gfx->drawString(x_pos + gwidth / 2, y_pos - 17, title);
+    gfx->setFont(ArialMT_Plain_10);
+    gfx->setTextAlignment(TEXT_ALIGN_RIGHT);
+    // Draw the data
+    for (int gx = 1; gx < readings; gx++) {
+        x1 = last_x;
+        y1 = last_y;
+        // MAX_READINGS is the global variable that sets the maximum data that can be plotted
+        x2 = x_pos + gx * gwidth/(readings-1)-1 ;
+        y2 = y_pos + (Y1Max - constrain(DataArray[gx], Y1Min, Y1Max)) / (Y1Max - Y1Min) * gheight + 1;
+        if (barchart_mode) {
+            gfx->fillRect(x2, y2, (gwidth/readings)-1, y_pos + gheight - y2 + 1);
+        } else {
+            gfx->drawLine(last_x, last_y, x2, y2);
+        }
+        last_x = x2;
+        last_y = y2;
     }
-    if ( (Y1Max-(float)(Y1Max-Y1Min)/y_minor_axis*spacing) < 10) {gfx->drawString(x_pos-2, y_pos+gheight*spacing/y_minor_axis-5, String((Y1Max-(float)(Y1Max-Y1Min)/y_minor_axis*spacing+0.01), 1));}
-    else {
-      if (Y1Min < 1) gfx->drawString(x_pos - 2, y_pos + gheight * spacing / y_minor_axis - 5, String((Y1Max - (float)(Y1Max - Y1Min) / y_minor_axis * spacing+0.01), 1));
-      else gfx->drawString(x_pos - 2, y_pos + gheight * spacing / y_minor_axis - 5, String((Y1Max - (float)(Y1Max - Y1Min) / y_minor_axis * spacing + 0.01), 0)); // +0.01 prevents -0.00 occurring
+    //Draw the Y-axis scale
+    for (int spacing = 0; spacing <= y_minor_axis; spacing++) {
+        #define number_of_dashes 20
+        for (int j = 0; j < number_of_dashes; j++) { // Draw dashed graph grid lines
+            if (spacing < y_minor_axis) {
+                gfx->drawHorizontalLine((x_pos + 3 + j * gwidth / number_of_dashes),
+                                        y_pos + (gheight * spacing / y_minor_axis),
+                                        gwidth / (2 * number_of_dashes));
+            }
+        }
+        if ( (Y1Max-(float)(Y1Max-Y1Min)/y_minor_axis*spacing) < 10) {
+            gfx->drawString(x_pos-2, y_pos+gheight*spacing/y_minor_axis-5,
+                            String((Y1Max-(float)(Y1Max-Y1Min)/y_minor_axis*spacing+0.01), 1));
+        } else {
+            if (Y1Min < 1) {
+                gfx->drawString(x_pos - 2, y_pos + gheight * spacing / y_minor_axis - 5,
+                    String((Y1Max - (float)(Y1Max - Y1Min) / y_minor_axis * spacing+0.01), 1));
+            } else {
+                gfx->drawString(x_pos - 2, y_pos + gheight * spacing / y_minor_axis - 5,
+                    String((Y1Max - (float)(Y1Max - Y1Min) / y_minor_axis * spacing + 0.01), 0));
+                    // +0.01 prevents -0.00 occurring
+            }
+        }
     }
-  }
-  for (int i = 0; i <= 3; i++) {
-    gfx->drawString(5 + x_pos + gwidth / 3 * i, y_pos + gheight + 3, String(i));
-  }
-  gfx->drawString(x_pos+gwidth/2+12,y_pos+gheight+5,"Days");
+    for (int i = 0; i <= 3; i++) {
+        gfx->drawString(5 + x_pos + gwidth / 3 * i, y_pos + gheight + 3, String(12*i)+"h");
+    }
+    //gfx->drawString(x_pos+gwidth/2+12,y_pos+gheight+5,"Days");
 }
 //#########################################################################################

@@ -22,7 +22,7 @@ static bool TEMP_BARCHART_ON = false;
 static bool RAIN_AUTOSCALE_ON = true;
 static bool RAIN_BARCHART_ON = true;
 
-static const int MAX_READINGS = 24;
+static const int MAX_READINGS = 12;
 //http://api.openweathermap.org/data/2.5/forecast?q=Melksham,UK&APPID=your_OWM_API_key&mode=json&units=metric&cnt=40
 //http://api.openweathermap.org/data/2.5/weather?q=Melksham,UK&APPID=your_OWM_API_key&mode=json&units=metric&cnt=1
 //Set your location according to OWM locations

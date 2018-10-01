@@ -87,5 +87,8 @@ class draw_manager{
                         int readings,
                         bool auto_scale,
                         bool barchart_mode);
+        
+        void Draw_Wind_Section(int x, int y, float angle, float windspeed);
+        void Draw_Condition_Section(int x, int y, String IconName);
 };
 #endif // DRAW_MANAGER_H
