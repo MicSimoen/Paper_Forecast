@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 static int SMALL = 4;
-static int LARGE = 10;
+static int LARGE = 14;
 static float SCREEN_WIDTH = 400.0;    // Set for landscape mode, don't remove the decimal place!
 static float SCREEN_HEIGHT = 300.0;
 static uint8_t BITS_PER_PIXEL = 1;

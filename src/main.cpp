@@ -60,9 +60,9 @@ void begin_sleep(){
 void Display_Weather(draw_manager *Draw_Manager) {              // 4.2" e-paper display is 400x300 resolution
   Draw_Manager->Draw_Heading_Section(Day_time_str, time_str);             // Top line of the display
   Draw_Manager->Draw_Main_Weather_Section(170, 70, WxConditions); // Centre section of display for Location, temperature, Weather report, current Wx Symbol and wind direction
-  Draw_Manager->Draw_Forecast_Section(230, 18,
-    pressure_readings, rain_readings, temperature_readings, WxForecast);     // 3hr forecast boxes
-  Draw_Manager->Draw_Astronomy_Section(230, 20, WxConditions);    // Astronomy section Sun rise/set, Moon phase and Moon icon
+  //Draw_Manager->Draw_Forecast_Section(230, 18,
+  //  pressure_readings, rain_readings, temperature_readings, WxForecast);     // 3hr forecast boxes
+  // Draw_Manager->Draw_Astronomy_Section(230, 20, WxConditions);    // Astronomy section Sun rise/set, Moon phase and Moon icon
 }
 //#########################################################################################
 void Convert_Readings_to_Imperial() {

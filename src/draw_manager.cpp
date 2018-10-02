@@ -46,48 +46,64 @@ void draw_manager::Draw_Heading_Section(String Day_time_str, String time_str) {
 void draw_manager::Draw_Wind_Section(int x, int y, float angle, float windspeed) {
     int Cradius = 44;
 
-    gfx->drawRect(x-65, y-80, 130, 140);
+    gfx->drawRect(x, y, 130, 140);
 
     gfx->setTextAlignment(TEXT_ALIGN_CENTER);
     gfx->setFont(ArialRoundedMTBold_14);
-    gfx->drawString(x, y -79, "Wind");
-    gfx->drawLine(x-65, y-60, x+65, y-60);
+    gfx->drawString(x + 65, y +1, "Wind");
+    gfx->drawLine(x, y + 20, x + 130, y + 20);
     
-    gfx->drawCircle(x, y, Cradius -1);
-    gfx->drawCircle(x, y, Cradius);
+    gfx->drawCircle(x + 65, y + 80, Cradius -1);
+    gfx->drawCircle(x + 65, y + 80, Cradius);
     float i;
     float x_pos, y_pos, x_start, y_start, x_end, y_end;
     gfx->setTextAlignment(TEXT_ALIGN_CENTER);
     gfx->setFont(ArialMT_Plain_10);
     for(i=0; i<360; i+=45) {
-        x_pos = (Cradius + 9) * cos((i - 90) * PI / 180) + x; // calculate X position
-        y_pos = (Cradius + 9) * sin((i - 90) * PI / 180) + y - 6; // calculate Y position
+        x_pos = (Cradius + 9) * cos((i - 90) * PI / 180) + x + 65; // calculate X position
+        y_pos = (Cradius + 9) * sin((i - 90) * PI / 180) + y + 74; // calculate Y position
         gfx->drawString(x_pos, y_pos, utils::WindDegToDirection(i));
-        x_start = (Cradius - 7) * cos((i - 90) * PI / 180) + x; // calculate X position
-        y_start = (Cradius - 7) * sin((i - 90) * PI / 180) + y; // calculate Y position
-        x_end = (Cradius - 12) * cos((i - 90) * PI / 180) + x; // calculate X position
-        y_end = (Cradius - 12) * sin((i - 90) * PI / 180) + y; // calculate Y position
+        x_start = (Cradius - 7) * cos((i - 90) * PI / 180) + x + 65; // calculate X position
+        y_start = (Cradius - 7) * sin((i - 90) * PI / 180) + y + 80; // calculate Y position
+        x_end = (Cradius - 12) * cos((i - 90) * PI / 180) + x +65; // calculate X position
+        y_end = (Cradius - 12) * sin((i - 90) * PI / 180) + y + 80; // calculate Y position
         gfx->drawLine(x_start, y_start, x_end, y_end);
     }
 
-    arrow(x, y, Cradius - 12, angle, 5, 10); // Show wind direction on outer circle
+    arrow(x + 65, y + 80, Cradius - 12, angle, 5, 10); // Show wind direction on outer circle
     gfx->setTextAlignment(TEXT_ALIGN_CENTER);
     gfx->setFont(ArialRoundedMTBold_14);
-    gfx->drawString(x, y - 24, String(round(angle))+"°");
-    gfx->drawString(x, y -9, String(windspeed,1) + (UNITS == "M" ? " m/s" : " mph"));
-    gfx->drawString(x, y + 6, utils::WindDegToDirection(angle));
+    gfx->drawString(x + 65, y + 56, String(round(angle))+"°");
+    gfx->drawString(x + 65, y  + 71, String(windspeed,1) + (UNITS == "M" ? " m/s" : " mph"));
+    gfx->drawString(x + 65, y + 86, utils::WindDegToDirection(angle));
     
 }
 //#########################################################################################
-void draw_manager::Draw_Condition_Section(int x, int y, String IconName) {
-    gfx->drawRect(x-45, y-80, 90, 140);
+void draw_manager::Draw_Condition_Section(int x, int y, Forecast_record_type *WxConditions) {
+    
+    /* gfx->drawRect(x-45, y-80, 90, 140);
 
     gfx->setTextAlignment(TEXT_ALIGN_CENTER);
     gfx->setFont(ArialRoundedMTBold_14);
     gfx->drawString(x, y -79, "Condition");
     gfx->drawLine(x-45, y-60, x+45, y-60);
     
-    DisplayWXicon(x, y+10, IconName, MAIN_WEATHER_LARGE_ICON);
+    DisplayWXicon(x, y+10, IconName, MAIN_WEATHER_LARGE_ICON); */
+
+    gfx->fillRect(x, y, 130, 285);
+    DisplayWXicon(x + 65, y + 90, WxConditions[0].Icon, MAIN_WEATHER_LARGE_ICON, true);
+
+    gfx->setColor(EPD_WHITE);
+    gfx->setTextAlignment(TEXT_ALIGN_CENTER);
+    gfx->setFont(ArialMT_Plain_24);
+    gfx->drawString(x + 65, y + 165, String(WxConditions[0].High,0) + "° | " + String(WxConditions[0].Low,0) + "°"); // Show forecast high and Low
+    gfx->setFont(ArialRoundedMTBold_36);
+    gfx->drawString(x + 65, y + 200, String(WxConditions[0].Temperature,1) + "°" + (UNITS=="M"?"C":"F")); // Show current Temperature
+    //gfx->setFont(ArialMT_Plain_24);
+    //gfx->setTextAlignment(TEXT_ALIGN_LEFT);  
+    //gfx->drawString(x+String(WxConditions[0].Temperature,1).length()*20/2 + 65,y+201,UNITS=="M"?"C":"F"); // Add in smaller Temperature unit
+    gfx->setFont(ArialRoundedMTBold_14);
+    gfx->setTextAlignment(TEXT_ALIGN_LEFT);
     
 }
 //#########################################################################################
@@ -114,8 +130,8 @@ void draw_manager::Draw_Main_Weather_Section(int x,
     gfx->drawString(x - 170, y + 70, utils::TitleCase(Wx_Description));
     Draw_Main_Wx(x -98, y - 1, WxConditions);
     gfx->drawLine(0, y + 68, screen_width, y + 68); */
-    Draw_Wind_Section(65, 95, WxConditions[0].Winddir, WxConditions[0].Windspeed);
-    Draw_Condition_Section(175, 95, WxConditions[0].Icon);
+    Draw_Wind_Section(130, 15, WxConditions[0].Winddir, WxConditions[0].Windspeed);
+    Draw_Condition_Section(0, 15, WxConditions);
 }
 //#########################################################################################
 void draw_manager::Draw_Forecast_Section(int x,
@@ -161,7 +177,7 @@ void draw_manager::Draw_Forecast_Weather(int x,
   gfx->setColor(EPD_BLACK); // Sometimes gets set to WHITE, so change back
   gfx->drawRect(x, y, 55, 65);
   gfx->drawLine(x + 1, y + 13, x + 55, y + 13);
-  DisplayWXicon(x + 28, y + 35, WxForecast[index].Icon, FORECAST_LARGE_ICON);
+  DisplayWXicon(x + 28, y + 35, WxForecast[index].Icon, FORECAST_LARGE_ICON, false);
   gfx->setTextAlignment(TEXT_ALIGN_CENTER);
   gfx->setFont(ArialMT_Plain_10);
   gfx->drawString(x + 28, y, String(WxForecast[index].Period.substring(11,16)));
@@ -322,272 +338,317 @@ void draw_manager::arrow(int x, int y, int asize, float aangle, int pwidth, int 
     gfx->fillTriangle(xx1, yy1, xx3, yy3, xx2, yy2);
 }
 //#########################################################################################
-void draw_manager::DisplayWXicon(int x, int y, String IconName, bool LargeSize) {
+void draw_manager::DisplayWXicon(int x, int y, String IconName, bool LargeSize, bool invert_color) {
   gfx->setTextAlignment(TEXT_ALIGN_CENTER);
   Serial.println(IconName);
-    if      (IconName == "01d" || IconName == "01n")  Sunny(x, y, LargeSize, IconName);
-    else if (IconName == "02d" || IconName == "02n")  MostlySunny(x, y, LargeSize, IconName);
-    else if (IconName == "03d" || IconName == "03n")  Cloudy(x, y, LargeSize, IconName);
-    else if (IconName == "04d" || IconName == "04n")  MostlySunny(x, y, LargeSize, IconName);
-    else if (IconName == "09d" || IconName == "09n")  ChanceRain(x, y, LargeSize, IconName);
-    else if (IconName == "10d" || IconName == "10n")  Rain(x, y, LargeSize, IconName);
-    else if (IconName == "11d" || IconName == "11n")  Tstorms(x, y, LargeSize, IconName); 
-    else if (IconName == "13d" || IconName == "13n")  Snow(x, y, LargeSize, IconName);
-    else if (IconName == "50d")                       Haze(x, y - 5, LargeSize, IconName);
-    else if (IconName == "50n")                       Fog(x, y - 5, LargeSize, IconName);
-    else                                              Nodata(x, y, LargeSize);
+    if      (IconName == "01d" || IconName == "01n")  Sunny(x, y, LargeSize, invert_color, IconName);
+    else if (IconName == "02d" || IconName == "02n")  MostlySunny(x, y, LargeSize, invert_color, IconName);
+    else if (IconName == "03d" || IconName == "03n")  Cloudy(x, y, LargeSize, invert_color, IconName);
+    else if (IconName == "04d" || IconName == "04n")  MostlySunny(x, y, LargeSize, invert_color, IconName);
+    else if (IconName == "09d" || IconName == "09n")  ChanceRain(x, y, LargeSize, invert_color, IconName);
+    else if (IconName == "10d" || IconName == "10n")  Rain(x, y, LargeSize, invert_color, IconName);
+    else if (IconName == "11d" || IconName == "11n")  Tstorms(x, y, LargeSize, invert_color, IconName); 
+    else if (IconName == "13d" || IconName == "13n")  Snow(x, y, LargeSize, invert_color, IconName);
+    else if (IconName == "50d")                       Haze(x, y - 5, LargeSize, invert_color, IconName);
+    else if (IconName == "50n")                       Fog(x, y - 5, LargeSize, invert_color, IconName);
+    else                                              Nodata(x, y, LargeSize, invert_color);
 }
 //#########################################################################################
 // Symbols are drawn on a relative 10x10grid and 1 scale unit = 1 drawing unit
 void draw_manager::addcloud(int x, int y, int scale, int linesize) {
-  //Draw cloud outer
-  gfx->fillCircle(x - scale * 3, y, scale);                       // Left most circle
-  gfx->fillCircle(x + scale * 3, y, scale);                       // Right most circle
-  gfx->fillCircle(x - scale, y - scale, scale * 1.4);             // left middle upper circle
-  gfx->fillCircle(x + scale * 1.5, y - scale * 1.3, scale * 1.75); // Right middle upper circle
-  gfx->fillRect(x - scale * 3 - 1, y - scale, scale * 6, scale * 2 + 1); // Upper and lower lines
-  //Clear cloud inner
-  gfx->setColor(EPD_WHITE);
-  gfx->fillCircle(x - scale * 3, y, scale - linesize);            // Clear left most circle
-  gfx->fillCircle(x + scale * 3, y, scale - linesize);            // Clear right most circle
-  gfx->fillCircle(x - scale, y - scale, scale * 1.4 - linesize);  // left middle upper circle
-  gfx->fillCircle(x + scale * 1.5, y - scale * 1.3, scale * 1.75 - linesize); // Right middle upper circle
-  gfx->fillRect(x - scale * 3 + 2, y - scale + linesize - 1, scale * 5.9, scale * 2 - linesize * 2 + 2); // Upper and lower lines
-  gfx->setColor(EPD_BLACK);
+    //Draw cloud outer
+    gfx->fillCircle(x - scale * 3, y, scale);                       // Left most circle
+    gfx->fillCircle(x + scale * 3, y, scale);                       // Right most circle
+    gfx->fillCircle(x - scale, y - scale, scale * 1.4);             // left middle upper circle
+    gfx->fillCircle(x + scale * 1.5, y - scale * 1.3, scale * 1.75); // Right middle upper circle
+    gfx->fillRect(x - scale * 3 - 1, y - scale, scale * 6, scale * 2 + 1); // Upper and lower lines
+    //Clear cloud inner
+    gfx->setColor(EPD_WHITE);
+    gfx->fillCircle(x - scale * 3, y, scale - linesize);            // Clear left most circle
+    gfx->fillCircle(x + scale * 3, y, scale - linesize);            // Clear right most circle
+    gfx->fillCircle(x - scale, y - scale, scale * 1.4 - linesize);  // left middle upper circle
+    gfx->fillCircle(x + scale * 1.5, y - scale * 1.3, scale * 1.75 - linesize); // Right middle upper circle
+    gfx->fillRect(x - scale * 3 + 2, y - scale + linesize - 1, scale * 5.9, scale * 2 - linesize * 2 + 2); // Upper and lower lines
+    gfx->setColor(EPD_BLACK);
 }
 //#########################################################################################
-void draw_manager::addrain(int x, int y, int scale) {
-  y = y + scale / 2;
-  for (int i = 0; i < 6; i++) {
-    gfx->drawLine(x - scale * 4 + scale * i * 1.3 + 0, y + scale * 1.9, x - scale * 3.5 + scale * i * 1.3 + 0, y + scale);
-    if (scale != SMALL) {
-      gfx->drawLine(x - scale * 4 + scale * i * 1.3 + 1, y + scale * 1.9, x - scale * 3.5 + scale * i * 1.3 + 1, y + scale);
-      gfx->drawLine(x - scale * 4 + scale * i * 1.3 + 2, y + scale * 1.9, x - scale * 3.5 + scale * i * 1.3 + 2, y + scale);
+void draw_manager::addrain(int x, int y, int scale, bool invert_color) {
+    if (invert_color) {
+        gfx->setColor(EPD_WHITE);
     }
-  }
+    y = y + scale / 2;
+    for (int i = 0; i < 6; i++) {
+        gfx->drawLine(x - scale * 4 + scale * i * 1.3 + 0, y + scale * 1.9, x - scale * 3.5 + scale * i * 1.3 + 0, y + scale);
+        if (scale != SMALL) {
+        gfx->drawLine(x - scale * 4 + scale * i * 1.3 + 1, y + scale * 1.9, x - scale * 3.5 + scale * i * 1.3 + 1, y + scale);
+        gfx->drawLine(x - scale * 4 + scale * i * 1.3 + 2, y + scale * 1.9, x - scale * 3.5 + scale * i * 1.3 + 2, y + scale);
+        }
+    }
+    if (invert_color) {
+        gfx->setColor(EPD_BLACK);
+    }
 }
 //#########################################################################################
-void draw_manager::addsnow(int x, int y, int scale) {
-  int dxo, dyo, dxi, dyi;
-  for (int flakes = 0; flakes < 5; flakes++) {
-    for (int i = 0; i < 360; i = i + 45) {
-      dxo = 0.5 * scale * cos((i - 90) * 3.14 / 180); dxi = dxo * 0.1;
-      dyo = 0.5 * scale * sin((i - 90) * 3.14 / 180); dyi = dyo * 0.1;
-      gfx->drawLine(dxo + x + 0 + flakes * 1.5 * scale - scale * 3, dyo + y + scale * 2, dxi + x + 0 + flakes * 1.5 * scale - scale * 3, dyi + y + scale * 2);
+void draw_manager::addsnow(int x, int y, int scale, bool invert_color) {
+    if (invert_color) {
+        gfx->setColor(EPD_WHITE);
     }
-  }
+    int dxo, dyo, dxi, dyi;
+    for (int flakes = 0; flakes < 5; flakes++) {
+        for (int i = 0; i < 360; i = i + 45) {
+            dxo = 0.5 * scale * cos((i - 90) * 3.14 / 180); dxi = dxo * 0.1;
+            dyo = 0.5 * scale * sin((i - 90) * 3.14 / 180); dyi = dyo * 0.1;
+            gfx->drawLine(dxo + x + 0 + flakes * 1.5 * scale - scale * 3, dyo + y + scale * 2, dxi + x + 0 + flakes * 1.5 * scale - scale * 3, dyi + y + scale * 2);
+        }
+    }
+    if (invert_color) {
+        gfx->setColor(EPD_BLACK);
+    }
 }
 //#########################################################################################
-void draw_manager::addtstorm(int x, int y, int scale) {
-  y = y + scale / 2;
-  for (int i = 0; i < 5; i++) {
-    gfx->drawLine(x - scale * 4 + scale * i * 1.5 + 0, y + scale * 1.5, x - scale * 3.5 + scale * i * 1.5 + 0, y + scale);
-    if (scale != SMALL) {
-      gfx->drawLine(x - scale * 4 + scale * i * 1.5 + 1, y + scale * 1.5, x - scale * 3.5 + scale * i * 1.5 + 1, y + scale);
-      gfx->drawLine(x - scale * 4 + scale * i * 1.5 + 2, y + scale * 1.5, x - scale * 3.5 + scale * i * 1.5 + 2, y + scale);
+void draw_manager::addtstorm(int x, int y, int scale, bool invert_color) {
+    if (invert_color) {
+        gfx->setColor(EPD_WHITE);
     }
-    gfx->drawLine(x - scale * 4 + scale * i * 1.5, y + scale * 1.5 + 0, x - scale * 3 + scale * i * 1.5 + 0, y + scale * 1.5 + 0);
-    if (scale != SMALL) {
-      gfx->drawLine(x - scale * 4 + scale * i * 1.5, y + scale * 1.5 + 1, x - scale * 3 + scale * i * 1.5 + 0, y + scale * 1.5 + 1);
-      gfx->drawLine(x - scale * 4 + scale * i * 1.5, y + scale * 1.5 + 2, x - scale * 3 + scale * i * 1.5 + 0, y + scale * 1.5 + 2);
+    y = y + scale / 2;
+    for (int i = 0; i < 5; i++) {
+        gfx->drawLine(x - scale * 4 + scale * i * 1.5 + 0, y + scale * 1.5, x - scale * 3.5 + scale * i * 1.5 + 0, y + scale);
+        if (scale != SMALL) {
+            gfx->drawLine(x - scale * 4 + scale * i * 1.5 + 1, y + scale * 1.5, x - scale * 3.5 + scale * i * 1.5 + 1, y + scale);
+            gfx->drawLine(x - scale * 4 + scale * i * 1.5 + 2, y + scale * 1.5, x - scale * 3.5 + scale * i * 1.5 + 2, y + scale);
+        }
+        gfx->drawLine(x - scale * 4 + scale * i * 1.5, y + scale * 1.5 + 0, x - scale * 3 + scale * i * 1.5 + 0, y + scale * 1.5 + 0);
+        if (scale != SMALL) {
+            gfx->drawLine(x - scale * 4 + scale * i * 1.5, y + scale * 1.5 + 1, x - scale * 3 + scale * i * 1.5 + 0, y + scale * 1.5 + 1);
+            gfx->drawLine(x - scale * 4 + scale * i * 1.5, y + scale * 1.5 + 2, x - scale * 3 + scale * i * 1.5 + 0, y + scale * 1.5 + 2);
+        }
+        gfx->drawLine(x - scale * 3.5 + scale * i * 1.4 + 0, y + scale * 2.5, x - scale * 3 + scale * i * 1.5 + 0, y + scale * 1.5);
+        if (scale != SMALL) {
+            gfx->drawLine(x - scale * 3.5 + scale * i * 1.4 + 1, y + scale * 2.5, x - scale * 3 + scale * i * 1.5 + 1, y + scale * 1.5);
+            gfx->drawLine(x - scale * 3.5 + scale * i * 1.4 + 2, y + scale * 2.5, x - scale * 3 + scale * i * 1.5 + 2, y + scale * 1.5);
+        }
     }
-    gfx->drawLine(x - scale * 3.5 + scale * i * 1.4 + 0, y + scale * 2.5, x - scale * 3 + scale * i * 1.5 + 0, y + scale * 1.5);
-    if (scale != SMALL) {
-      gfx->drawLine(x - scale * 3.5 + scale * i * 1.4 + 1, y + scale * 2.5, x - scale * 3 + scale * i * 1.5 + 1, y + scale * 1.5);
-      gfx->drawLine(x - scale * 3.5 + scale * i * 1.4 + 2, y + scale * 2.5, x - scale * 3 + scale * i * 1.5 + 2, y + scale * 1.5);
+    if (invert_color) {
+        gfx->setColor(EPD_BLACK);
     }
-  }
 }
 //#########################################################################################
-void draw_manager::addsun(int x, int y, int scale) {
-  int linesize = 3;
-  if (scale == SMALL) linesize = 1;
-  int dxo, dyo, dxi, dyi;
-  gfx->fillCircle(x, y, scale);
-  gfx->setColor(EPD_WHITE);
-  gfx->fillCircle(x, y, scale - linesize);
-  gfx->setColor(EPD_BLACK);
-  for (float i = 0; i < 360; i = i + 45) {
-    dxo = 2.2 * scale * cos((i - 90) * 3.14 / 180); dxi = dxo * 0.6;
-    dyo = 2.2 * scale * sin((i - 90) * 3.14 / 180); dyi = dyo * 0.6;
-    if (i == 0   || i == 180) {
-      gfx->drawLine(dxo + x - 1, dyo + y, dxi + x - 1, dyi + y);
-      if (scale != SMALL) {
-        gfx->drawLine(dxo + x + 0, dyo + y, dxi + x + 0, dyi + y);
-        gfx->drawLine(dxo + x + 1, dyo + y, dxi + x + 1, dyi + y);
-      }
+void draw_manager::addsun(int x, int y, int scale, bool invert_color) {
+    if (invert_color) {
+        gfx->setColor(EPD_WHITE);
     }
-    if (i == 90  || i == 270) {
-      gfx->drawLine(dxo + x, dyo + y - 1, dxi + x, dyi + y - 1);
-      if (scale != SMALL) {
-        gfx->drawLine(dxo + x, dyo + y + 0, dxi + x, dyi + y + 0);
-        gfx->drawLine(dxo + x, dyo + y + 1, dxi + x, dyi + y + 1);
-      }
+    int linesize = 3;
+    if (scale == SMALL) linesize = 1;
+    int dxo, dyo, dxi, dyi;
+    gfx->fillCircle(x, y, scale);
+    if (!invert_color) {
+        gfx->setColor(EPD_WHITE);
+        gfx->fillCircle(x, y, scale - linesize);
+        gfx->setColor(EPD_BLACK);
     }
-    if (i == 45  || i == 135 || i == 225 || i == 315) {
-      gfx->drawLine(dxo + x - 1, dyo + y, dxi + x - 1, dyi + y);
-      if (scale != SMALL) {
-        gfx->drawLine(dxo + x + 0, dyo + y, dxi + x + 0, dyi + y);
-        gfx->drawLine(dxo + x + 1, dyo + y, dxi + x + 1, dyi + y);
-      }
+    for (float i = 0; i < 360; i = i + 45) {
+        dxo = 2.2 * scale * cos((i - 90) * 3.14 / 180); dxi = dxo * 0.6;
+        dyo = 2.2 * scale * sin((i - 90) * 3.14 / 180); dyi = dyo * 0.6;
+        if (i == 0   || i == 180) {
+            gfx->drawLine(dxo + x - 1, dyo + y, dxi + x - 1, dyi + y);
+            if (scale != SMALL) {
+                gfx->drawLine(dxo + x + 0, dyo + y, dxi + x + 0, dyi + y);
+                gfx->drawLine(dxo + x + 1, dyo + y, dxi + x + 1, dyi + y);
+            }
+        }
+        if (i == 90  || i == 270) {
+            gfx->drawLine(dxo + x, dyo + y - 1, dxi + x, dyi + y - 1);
+            if (scale != SMALL) {
+                gfx->drawLine(dxo + x, dyo + y + 0, dxi + x, dyi + y + 0);
+                gfx->drawLine(dxo + x, dyo + y + 1, dxi + x, dyi + y + 1);
+            }
+        }
+        if (i == 45  || i == 135 || i == 225 || i == 315) {
+            gfx->drawLine(dxo + x - 1, dyo + y, dxi + x - 1, dyi + y);
+            if (scale != SMALL) {
+                gfx->drawLine(dxo + x + 0, dyo + y, dxi + x + 0, dyi + y);
+                gfx->drawLine(dxo + x + 1, dyo + y, dxi + x + 1, dyi + y);
+            }
+        }
     }
-  }
+    if (invert_color) {
+        gfx->setColor(EPD_BLACK);
+    }
 }
 //#########################################################################################
-void draw_manager::addfog(int x, int y, int scale, int linesize) {
-  if (scale == SMALL) y -= 10;
-  if (scale == SMALL) linesize = 1;
-  for (int i = 0; i < 6; i++) {
-    gfx->fillRect(x - scale * 3, y + scale * 1.5, scale * 6, linesize);
-    gfx->fillRect(x - scale * 3, y + scale * 2.0, scale * 6, linesize);
-    gfx->fillRect(x - scale * 3, y + scale * 2.7, scale * 6, linesize);
-  }
+void draw_manager::addfog(int x, int y, int scale, int linesize, bool invert_color) {
+    if (invert_color) {
+        gfx->setColor(EPD_WHITE);
+    }
+    if (scale == SMALL) y -= 10;
+    if (scale == SMALL) linesize = 1;
+    for (int i = 0; i < 6; i++) {
+        gfx->fillRect(x - scale * 3, y + scale * 1.5, scale * 6, linesize);
+        gfx->fillRect(x - scale * 3, y + scale * 2.0, scale * 6, linesize);
+        gfx->fillRect(x - scale * 3, y + scale * 2.7, scale * 6, linesize);
+    }
+    if (invert_color) {
+        gfx->setColor(EPD_BLACK);
+    }
 }
 //#########################################################################################
-void draw_manager::MostlyCloudy(int x, int y, bool LargeSize, String IconName) {
+void draw_manager::MostlyCloudy(int x, int y, bool LargeSize, bool invert_color, String IconName) {
   int scale = SMALL;
   if (LargeSize) scale = LARGE;
   int linesize = 3;
   if (scale == SMALL) linesize = 1;
-  if (IconName.endsWith("n")) addmoon(x,y,scale);
+  if (IconName.endsWith("n")) addmoon(x,y,scale, invert_color);
   addcloud(x, y, scale, linesize);
-  addsun(x - scale * 1.8, y - scale * 1.8, scale);
+  addsun(x - scale * 1.8, y - scale * 1.8, scale, invert_color);
   addcloud(x, y, scale, linesize);
 }
 //#########################################################################################
-void draw_manager::MostlySunny(int x, int y, bool LargeSize, String IconName) {
+void draw_manager::MostlySunny(int x, int y, bool LargeSize, bool invert_color, String IconName) {
   int scale = SMALL;
   if (LargeSize) scale = LARGE;
   int linesize = 3;
   if (scale == SMALL) linesize = 1;
-  if (IconName.endsWith("n")) addmoon(x,y,scale);
+  if (IconName.endsWith("n")) addmoon(x,y,scale, invert_color);
   addcloud(x, y, scale, linesize);
-  addsun(x - scale * 1.8, y - scale * 1.8, scale);
+  addsun(x - scale * 1.8, y - scale * 1.8, scale, invert_color);
 }
 //#########################################################################################
-void draw_manager::Rain(int x, int y, bool LargeSize, String IconName) {
+void draw_manager::Rain(int x, int y, bool LargeSize, bool invert_color, String IconName) {
   int scale = SMALL;
   if (LargeSize) scale = LARGE;
   int linesize = 3;
   if (scale == SMALL) linesize = 1;
-  if (IconName.endsWith("n")) addmoon(x,y,scale);
+  if (IconName.endsWith("n")) addmoon(x,y,scale, invert_color);
   addcloud(x, y, scale, linesize);
-  addrain(x, y, scale);
+  addrain(x, y, scale, invert_color);
 }
 //#########################################################################################
-void draw_manager::Cloudy(int x, int y, bool LargeSize, String IconName) {
+void draw_manager::Cloudy(int x, int y, bool LargeSize, bool invert_color, String IconName) {
   int scale = SMALL;
   if (LargeSize) scale = LARGE;
   int linesize = 3;
   if (scale == SMALL) {
-    if (IconName.endsWith("n")) addmoon(x,y,scale);
+    if (IconName.endsWith("n")) addmoon(x,y,scale, invert_color);
     linesize = 1;
     addcloud(x, y, scale, linesize);
   }
   else {
     y += 25;
-    if (IconName.endsWith("n")) addmoon(x,y-15,scale);
-    addcloud(x+30, y-35, 4, linesize); // Cloud top right
-    addcloud(x-20, y-25, 6, linesize); // Cloud top left
+    if (IconName.endsWith("n")) addmoon(x,y-15,scale, invert_color);
+    addcloud(x+30, y-35, 6, linesize); // Cloud top right
+    addcloud(x-20, y-25, 8, linesize); // Cloud top left
     addcloud(x, y, scale, linesize);   // Main cloud
   }
 }
 //#########################################################################################
-void draw_manager::Sunny(int x, int y, bool LargeSize, String IconName) {
-  int scale = SMALL;
-  if (LargeSize) scale = LARGE;
-  if (IconName.endsWith("n")) addmoon(x,y,scale);
-  scale = scale * 1.5;
-  addsun(x, y, scale);
+void draw_manager::Sunny(int x, int y, bool LargeSize, bool invert_color, String IconName) {
+    int scale = SMALL;
+    if (LargeSize) scale = LARGE;
+    if (IconName.endsWith("n")) addmoon(x,y,scale, invert_color);
+    scale = scale * 1.5;
+    addsun(x, y, scale, invert_color);
 }
 //#########################################################################################
-void draw_manager::ExpectRain(int x, int y, bool LargeSize, String IconName) {
+void draw_manager::ExpectRain(int x, int y, bool LargeSize, bool invert_color, String IconName) {
   int scale = SMALL;
   if (LargeSize) scale = LARGE;
   int linesize = 3;
   if (scale == SMALL) linesize = 1;
-  if (IconName.endsWith("n")) addmoon(x,y,scale);
-  addsun(x - scale * 1.8, y - scale * 1.8, scale);
+  if (IconName.endsWith("n")) addmoon(x,y,scale, invert_color);
+  addsun(x - scale * 1.8, y - scale * 1.8, scale, invert_color);
   addcloud(x, y, scale, linesize);
-  addrain(x, y, scale);
+  addrain(x, y, scale, invert_color);
 }
 //#########################################################################################
-void draw_manager::ChanceRain(int x, int y, bool LargeSize, String IconName) {
+void draw_manager::ChanceRain(int x, int y, bool LargeSize, bool invert_color, String IconName) {
   int scale = SMALL;
   if (LargeSize) scale = LARGE;
   int linesize = 3;
   if (scale == SMALL) linesize = 1;
-  if (IconName.endsWith("n")) addmoon(x,y,scale);
-  addsun(x - scale * 1.8, y - scale * 1.8, scale);
+  if (IconName.endsWith("n")) addmoon(x,y,scale, invert_color);
+  addsun(x - scale * 1.8, y - scale * 1.8, scale, invert_color);
   addcloud(x, y, scale, linesize);
-  addrain(x, y, scale);
+  addrain(x, y, scale, invert_color);
 }
 //#########################################################################################
-void draw_manager::Tstorms(int x, int y, bool LargeSize, String IconName) {
+void draw_manager::Tstorms(int x, int y, bool LargeSize, bool invert_color, String IconName) {
   int scale = SMALL;
   if (LargeSize) scale = LARGE;
   int linesize = 3;
   if (scale == SMALL) linesize = 1;
-  if (IconName.endsWith("n")) addmoon(x,y,scale);
+  if (IconName.endsWith("n")) addmoon(x,y,scale, invert_color);
   addcloud(x, y, scale, linesize);
-  addtstorm(x, y, scale);
+  addtstorm(x, y, scale, invert_color);
 }
 //#########################################################################################
-void draw_manager::Snow(int x, int y, bool LargeSize, String IconName) {
+void draw_manager::Snow(int x, int y, bool LargeSize, bool invert_color, String IconName) {
   int scale = SMALL;
   if (LargeSize) scale = LARGE;
   int linesize = 3;
   if (scale == SMALL) linesize = 1;
-  if (IconName.endsWith("n")) addmoon(x,y,scale);
+  if (IconName.endsWith("n")) addmoon(x,y,scale, invert_color);
   addcloud(x, y, scale, linesize);
-  addsnow(x, y, scale);
+  addsnow(x, y, scale, invert_color);
 }
 //#########################################################################################
-void draw_manager::Fog(int x, int y, bool LargeSize, String IconName) {
+void draw_manager::Fog(int x, int y, bool LargeSize, bool invert_color, String IconName) {
   int scale = SMALL;
   if (LargeSize) scale = LARGE;
   int linesize = 3;
   if (scale == SMALL) linesize = 1;
-  if (IconName.endsWith("n")) addmoon(x,y,scale);
+  if (IconName.endsWith("n")) addmoon(x,y,scale, invert_color);
   addcloud(x, y, scale, linesize);
-  addfog(x, y, scale, linesize);
+  addfog(x, y, scale, linesize, invert_color);
 }
 //#########################################################################################
-void draw_manager::Haze(int x, int y, bool LargeSize, String IconName) {
+void draw_manager::Haze(int x, int y, bool LargeSize, bool invert_color, String IconName) {
   int scale = SMALL;
   if (LargeSize) scale = LARGE;
   int linesize = 3;
   if (scale == SMALL) linesize = 1;
-  if (IconName.endsWith("n")) addmoon(x,y,scale);
-  addsun(x, y, scale*1.4);
-  addfog(x, y, scale*1.4, linesize);
+  if (IconName.endsWith("n")) addmoon(x,y,scale, invert_color);
+  addsun(x, y, scale*1.4, invert_color);
+  addfog(x, y, scale*1.4, linesize, invert_color);
 }
 //#########################################################################################
-void draw_manager::addmoon (int x, int y, int scale){
-  if (scale == LARGE) {
-    /*gfx->fillCircle(x-37,y-33,scale);
-    gfx->setColor(EPD_WHITE);
-    gfx->fillCircle(x-27,y-33,scale*1.6);
-    gfx->setColor(EPD_BLACK);*/
-    gfx->fillCircle(x-32,y-47,scale*0.7);
-    gfx->setColor(EPD_WHITE);
-    gfx->fillCircle(x-22,y-47,scale*1.12);
+void draw_manager::addmoon (int x, int y, int scale, bool invert_color){
+    if (invert_color) {
+        gfx->setColor(EPD_WHITE);
+        if (scale == LARGE) {
+            gfx->fillCircle(x-40,y-70,scale*0.7);
+            gfx->setColor(EPD_BLACK);
+            gfx->fillCircle(x-30,y-70,scale*1.12);
+        } else {
+            gfx->fillCircle(x-20,y-15,scale);
+            gfx->setColor(EPD_BLACK);
+            gfx->fillCircle(x-15,y-15,scale*1.6);
+        }
+    } else {
+        if (scale == LARGE) {
+            gfx->fillCircle(x-40,y-70,scale*0.7);
+            gfx->setColor(EPD_WHITE);
+            gfx->fillCircle(x-30,y-70,scale*1.12);
+        } else {
+            gfx->fillCircle(x-20,y-15,scale);
+            gfx->setColor(EPD_WHITE);
+            gfx->fillCircle(x-15,y-15,scale*1.6);
+        }
+    }
     gfx->setColor(EPD_BLACK);
-  }
-  else
-  {
-    gfx->fillCircle(x-20,y-15,scale);
-    gfx->setColor(EPD_WHITE);
-    gfx->fillCircle(x-15,y-15,scale*1.6);
-    gfx->setColor(EPD_BLACK);
-  }
+  
 }
 //#########################################################################################
-void draw_manager::Nodata(int x, int y, bool LargeSize) {
-  int scale = SMALL;
-  if (LargeSize) scale = LARGE;
-  if (scale == LARGE) gfx->setFont(ArialMT_Plain_24); else gfx->setFont(ArialMT_Plain_16);
-  gfx->drawString(x, y-10, "N/A");
+void draw_manager::Nodata(int x, int y, bool LargeSize, bool invert_color) {
+    if (invert_color) {
+        gfx->setColor(EPD_WHITE);
+    }
+    int scale = SMALL;
+    if (LargeSize) scale = LARGE;
+    if (scale == LARGE) gfx->setFont(ArialMT_Plain_24); else gfx->setFont(ArialMT_Plain_16);
+    gfx->drawString(x, y-10, "N/A");
+    if (invert_color) {
+        gfx->setColor(EPD_BLACK);
+    }
 }
 //#########################################################################################
 void draw_manager::DrawBattery(int x, int y) {

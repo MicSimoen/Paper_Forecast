@@ -55,26 +55,26 @@ class draw_manager{
                         int Coffset_radius,
                         int Coffset);
         void arrow(int x, int y, int asize, float aangle, int pwidth, int plength);
-        void DisplayWXicon(int x, int y, String IconName, bool LargeSize);
+        void DisplayWXicon(int x, int y, String IconName, bool LargeSize, bool invert_color);
         void addcloud(int x, int y, int scale, int linesize);
-        void addrain(int x, int y, int scale);
-        void addsnow(int x, int y, int scale);
-        void addtstorm(int x, int y, int scale);
-        void addsun(int x, int y, int scale);
-        void addfog(int x, int y, int scale, int linesize);
-        void MostlyCloudy(int x, int y, bool LargeSize, String IconName);
-        void MostlySunny(int x, int y, bool LargeSize, String IconName);
-        void Rain(int x, int y, bool LargeSize, String IconName);
-        void Cloudy(int x, int y, bool LargeSize, String IconName);
-        void Sunny(int x, int y, bool LargeSize, String IconName);
-        void ExpectRain(int x, int y, bool LargeSize, String IconName);
-        void ChanceRain(int x, int y, bool LargeSize, String IconName);
-        void Tstorms(int x, int y, bool LargeSize, String IconName);
-        void Snow(int x, int y, bool LargeSize, String IconName);
-        void Fog(int x, int y, bool LargeSize, String IconName);
-        void Haze(int x, int y, bool LargeSize, String IconName);
-        void addmoon (int x, int y, int scale);
-        void Nodata(int x, int y, bool LargeSize);
+        void addrain(int x, int y, int scale, bool invert_color);
+        void addsnow(int x, int y, int scale, bool invert_color);
+        void addtstorm(int x, int y, int scale, bool invert_color);
+        void addsun(int x, int y, int scale, bool invert_color);
+        void addfog(int x, int y, int scale, int linesize, bool invert_color);
+        void MostlyCloudy(int x, int y, bool LargeSize, bool invert_color, String IconName);
+        void MostlySunny(int x, int y, bool LargeSize, bool invert_color, String IconName);
+        void Rain(int x, int y, bool LargeSize, bool invert_color, String IconName);
+        void Cloudy(int x, int y, bool LargeSize, bool invert_color, String IconName);
+        void Sunny(int x, int y, bool LargeSize, bool invert_color, String IconName);
+        void ExpectRain(int x, int y, bool LargeSize, bool invert_color, String IconName);
+        void ChanceRain(int x, int y, bool LargeSize, bool invert_color, String IconName);
+        void Tstorms(int x, int y, bool LargeSize, bool invert_color, String IconName);
+        void Snow(int x, int y, bool LargeSize, bool invert_color, String IconName);
+        void Fog(int x, int y, bool LargeSize, bool invert_color, String IconName);
+        void Haze(int x, int y, bool LargeSize, bool invert_color, String IconName);
+        void addmoon (int x, int y, int scale, bool invert_color);
+        void Nodata(int x, int y, bool LargeSize, bool invert_color);
         void DrawBattery(int x, int y);
         void DrawGraph(int x_pos,
                        int y_pos,
@@ -89,6 +89,6 @@ class draw_manager{
                         bool barchart_mode);
         
         void Draw_Wind_Section(int x, int y, float angle, float windspeed);
-        void Draw_Condition_Section(int x, int y, String IconName);
+        void Draw_Condition_Section(int x, int y, Forecast_record_type *WxConditions);
 };
 #endif // DRAW_MANAGER_H
