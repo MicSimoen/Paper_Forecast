@@ -42,16 +42,59 @@ void draw_manager::Draw_Heading_Section(String Day_time_str, String time_str) {
     gfx->drawString(5, 0, Day_time_str);
     gfx->drawLine(0, 15, screen_width, 15);
 }
+void draw_manager::Draw_Weather(Forecast_record_type *WxConditions, Forecast_record_type *WxForecast) {
+    gfx->fillRect(0, 15, SCREEN_WIDTH, SCREEN_HEIGHT);
+    Draw_Condition_Section(0, 15, WxConditions, WxForecast);
+    Draw_Wind_Section(130, 18, WxConditions[0].Winddir, WxConditions[0].Windspeed);
+    Draw_Rain_Section(261, 18, WxConditions[0].Rainfall);
+    Draw_Pressure_Section(330, 18, WxConditions[0].Pressure, WxConditions[0].Trend);
+    Draw_Description_Section(261, 90, WxConditions);
+    Draw_NextDay_Section(130, 160, WxForecast);
+}
+//#########################################################################################
+void draw_manager::Draw_Condition_Section(int x, int y, Forecast_record_type *WxConditions, Forecast_record_type *WxForecast) {
+    gfx->fillRect(x, y, 130, 285);
+    DisplayWXicon(x + 65, y + 90, WxConditions[0].Icon, MAIN_WEATHER_LARGE_ICON, true);
+
+    int max_index = 8;
+    // if(sizeof(WxForecast) < 8) {
+    //     max_index = sizeof(WxForecast);
+    // }
+
+    float min_temp = WxConditions[0].Temperature;
+    float max_temp = WxConditions[0].Temperature;
+    for(int i = 0; i <= max_index; i++) {
+        if(WxForecast[i].Temperature<min_temp) {
+            min_temp = WxForecast[i].Temperature;
+        }
+        if(WxForecast[i].Temperature>max_temp) {
+            max_temp = WxForecast[i].Temperature;
+        }
+    }
+
+    gfx->setColor(EPD_WHITE);
+    gfx->setTextAlignment(TEXT_ALIGN_CENTER);
+    gfx->setFont(ArialRoundedMTBold_36);
+    gfx->drawString(x + 65, y + 155, String(WxConditions[0].Temperature,1) + "°" + (UNITS=="M"?"C":"F")); // Show current Temperature
+    gfx->setFont(ArialMT_Plain_24);
+    gfx->drawString(x + 65, y + 200, String(min_temp,0) + "° | " + String(max_temp,0) + "°"); // Show forecast high and Low
+    gfx->setFont(ArialRoundedMTBold_14);
+    gfx->setTextAlignment(TEXT_ALIGN_LEFT);
+    gfx->setColor(EPD_BLACK);
+    
+}
 //#########################################################################################
 void draw_manager::Draw_Wind_Section(int x, int y, float angle, float windspeed) {
     int Cradius = 44;
 
-    gfx->drawRect(x, y, 130, 140);
+    gfx->setColor(EPD_WHITE);
+    gfx->fillRect(x, y, 129, 140);
+    gfx->setColor(EPD_BLACK);
 
     gfx->setTextAlignment(TEXT_ALIGN_CENTER);
     gfx->setFont(ArialRoundedMTBold_14);
-    gfx->drawString(x + 65, y +1, "Wind");
-    gfx->drawLine(x, y + 20, x + 130, y + 20);
+    gfx->drawString(x + 65, y + 1, "Wind");
+    gfx->drawLine(x , y + 20, x + 128, y + 20);
     
     gfx->drawCircle(x + 65, y + 80, Cradius -1);
     gfx->drawCircle(x + 65, y + 80, Cradius);
@@ -79,38 +122,105 @@ void draw_manager::Draw_Wind_Section(int x, int y, float angle, float windspeed)
     
 }
 //#########################################################################################
-void draw_manager::Draw_Condition_Section(int x, int y, Forecast_record_type *WxConditions) {
-    
-    /* gfx->drawRect(x-45, y-80, 90, 140);
-
-    gfx->setTextAlignment(TEXT_ALIGN_CENTER);
-    gfx->setFont(ArialRoundedMTBold_14);
-    gfx->drawString(x, y -79, "Condition");
-    gfx->drawLine(x-45, y-60, x+45, y-60);
-    
-    DisplayWXicon(x, y+10, IconName, MAIN_WEATHER_LARGE_ICON); */
-
-    gfx->fillRect(x, y, 130, 285);
-    DisplayWXicon(x + 65, y + 90, WxConditions[0].Icon, MAIN_WEATHER_LARGE_ICON, true);
-
+void draw_manager::Draw_Rain_Section(int x, int y, float rain){
     gfx->setColor(EPD_WHITE);
+    gfx->fillRect(x, y, 67, 70);
+    gfx->setColor(EPD_BLACK);
+
     gfx->setTextAlignment(TEXT_ALIGN_CENTER);
-    gfx->setFont(ArialMT_Plain_24);
-    gfx->drawString(x + 65, y + 165, String(WxConditions[0].High,0) + "° | " + String(WxConditions[0].Low,0) + "°"); // Show forecast high and Low
-    gfx->setFont(ArialRoundedMTBold_36);
-    gfx->drawString(x + 65, y + 200, String(WxConditions[0].Temperature,1) + "°" + (UNITS=="M"?"C":"F")); // Show current Temperature
-    //gfx->setFont(ArialMT_Plain_24);
-    //gfx->setTextAlignment(TEXT_ALIGN_LEFT);  
-    //gfx->drawString(x+String(WxConditions[0].Temperature,1).length()*20/2 + 65,y+201,UNITS=="M"?"C":"F"); // Add in smaller Temperature unit
     gfx->setFont(ArialRoundedMTBold_14);
-    gfx->setTextAlignment(TEXT_ALIGN_LEFT);
-    
+    gfx->drawString(x + 33, y + 1, "Rain");
+    gfx->drawLine(x, y + 20, x + 66, y + 20);
+
+    gfx->setTextAlignment(TEXT_ALIGN_CENTER);
+    if (rain > 0) {
+        gfx->drawString(x + 33, y + 35, String(rain, (UNITS == "M" ? 1 : 3)) + (UNITS == "M" ? "mm" : "in"));
+    } else {
+        gfx->drawString(x + 33, y + 35, "--");
+    }
+    gfx->setFont(ArialMT_Plain_10);
+
 }
+//#########################################################################################
+void draw_manager::Draw_Pressure_Section(int x, int y, float pressure, String trend){
+    gfx->setColor(EPD_WHITE);
+    gfx->fillRect(x, y, 67, 70);
+    gfx->setColor(EPD_BLACK);
+
+    gfx->setTextAlignment(TEXT_ALIGN_CENTER);
+    gfx->setFont(ArialRoundedMTBold_14);
+    gfx->drawString(x + 33, y + 1, "Pressure");
+    gfx->drawLine(x, y + 20, x + 66, y + 20);
+
+    gfx->setTextAlignment(TEXT_ALIGN_CENTER);
+    gfx->drawString(x + 33, y + 25, String(pressure,1) + (UNITS == "M" ? "mb" : "in"));
+
+    if (trend == "+") {
+        arrow(x + 33, y + 60, 0, 0.0, 10, 10);
+    } else if (trend == "0") {
+        arrow(x + 28, y + 55, 0, 90.0, 10, 10);
+   } else if (trend == "-") {
+        arrow(x + 33, y + 50, 0, 180.0, 10, 10);
+   }
+
+    gfx->setFont(ArialMT_Plain_10);
+
+}
+//#########################################################################################
+void draw_manager::Draw_Description_Section(int x, int y, Forecast_record_type *WxConditions){
+    gfx->setColor(EPD_WHITE);
+    gfx->fillRect(x, y, 136, 68);
+    gfx->setColor(EPD_BLACK);
+
+    String Wx_Description;
+    if (WxConditions[0].Forecast0 != "") {
+        gfx->setFont(ArialMT_Plain_24);
+        gfx->drawString(x + 67, y + 10, WxConditions[0].Main0);
+        Wx_Description = WxConditions[0].Forecast0;
+        if (WxConditions[0].Forecast1 != "" && WxConditions[0].Forecast1 != WxConditions[0].Forecast2) {
+            Wx_Description += " & " +  WxConditions[0].Forecast1;
+        }
+        gfx->setFont(ArialRoundedMTBold_14);
+        gfx->drawString(x + 67, y + 40, Wx_Description);
+    } else {
+        gfx->setFont(ArialMT_Plain_24);
+        gfx->drawString(x + 67, y + 30, WxConditions[0].Main0);
+    }
+    gfx->setFont(ArialMT_Plain_10);
+
+}
+void draw_manager::Draw_NextDay_Section(int x, int y, Forecast_record_type *WxForeCast) {
+    gfx->setColor(EPD_WHITE);
+    gfx->fillRect(x, y, 267, 137);
+    gfx->setColor(EPD_BLACK);
+
+    gfx->drawLine(x + 8, y + 68, x + 258, y + 68);
+    gfx->drawLine(x + 67, y + 6, x + 67, y + 62);
+    gfx->drawLine(x + 133, y + 6, x + 133, y + 62);
+    gfx->drawLine(x + 199, y + 6, x + 199, y + 62);
+    gfx->drawLine(x + 67, y + 75, x + 67, y + 130);
+    gfx->drawLine(x + 133, y + 75, x + 133, y + 130);
+    gfx->drawLine(x + 199, y + 75, x + 199, y + 130);
+
+    int x_index, y_index, index, x_pos, y_pos;
+    for (y_index = 0; y_index < 2; y_index++){
+        for(x_index = 0; x_index < 4; x_index++){
+            x_pos = x + 6 + x_index * 66;
+            y_pos = y + 2 + y_index * 70;
+            index = x_index + 4 * y_index;
+            Draw_Forecast_Weather(x_pos, y_pos, index, false, WxForeCast);
+        }
+    }
+}
+//#########################################################################################
+//#########################################################################################
+//#########################################################################################
+//#########################################################################################
 //#########################################################################################
 void draw_manager::Draw_Main_Weather_Section(int x,
                                              int y,
                                              Forecast_record_type *WxConditions) {
-    /* DisplayWXicon(x+5, y-5, WxConditions[0].Icon, MAIN_WEATHER_LARGE_ICON);
+    DisplayWXicon(x+5, y-5, WxConditions[0].Icon, MAIN_WEATHER_LARGE_ICON, false);
     gfx->setFont(ArialRoundedMTBold_14);
     DrawPressureTrend(x, y + 50, WxConditions[0].Pressure, WxConditions[0].Trend);
     gfx->setTextAlignment(TEXT_ALIGN_CENTER);
@@ -129,9 +239,7 @@ void draw_manager::Draw_Main_Weather_Section(int x,
     }
     gfx->drawString(x - 170, y + 70, utils::TitleCase(Wx_Description));
     Draw_Main_Wx(x -98, y - 1, WxConditions);
-    gfx->drawLine(0, y + 68, screen_width, y + 68); */
-    Draw_Wind_Section(130, 15, WxConditions[0].Winddir, WxConditions[0].Windspeed);
-    Draw_Condition_Section(0, 15, WxConditions);
+    gfx->drawLine(0, y + 68, screen_width, y + 68);
 }
 //#########################################################################################
 void draw_manager::Draw_Forecast_Section(int x,
@@ -141,9 +249,9 @@ void draw_manager::Draw_Forecast_Section(int x,
                                          float *temperature_readings,
                                          Forecast_record_type *WxForecast) {
   gfx->setFont(ArialMT_Plain_10);
-  Draw_Forecast_Weather(x, y, 0, WxForecast);
-  Draw_Forecast_Weather(x + 56, y, 1, WxForecast);
-  Draw_Forecast_Weather(x + 112, y, 2, WxForecast);
+  Draw_Forecast_Weather(x, y, 0, true,  WxForecast);
+  Draw_Forecast_Weather(x + 56, y, 1, true,  WxForecast);
+  Draw_Forecast_Weather(x + 112, y, 2, true, WxForecast);
   //       (x,y,width,height,MinValue, MaxValue, Title, Data Array, AutoScale, ChartMode)
   for (int r = 1; r <= MAX_READINGS; r++) {
     if (UNITS == "I") pressure_readings[r] = WxForecast[r].Pressure * 0.02953;  
@@ -172,16 +280,20 @@ void draw_manager::Draw_Forecast_Section(int x,
 void draw_manager::Draw_Forecast_Weather(int x,
                                          int y,
                                          int index,
+                                         bool draw_frame,
                                          Forecast_record_type *WxForecast) {
   gfx->setFont(ArialMT_Plain_10);
   gfx->setColor(EPD_BLACK); // Sometimes gets set to WHITE, so change back
-  gfx->drawRect(x, y, 55, 65);
+  if (draw_frame) {
+      gfx->drawRect(x, y, 55, 65);
+  }
   gfx->drawLine(x + 1, y + 13, x + 55, y + 13);
   DisplayWXicon(x + 28, y + 35, WxForecast[index].Icon, FORECAST_LARGE_ICON, false);
   gfx->setTextAlignment(TEXT_ALIGN_CENTER);
   gfx->setFont(ArialMT_Plain_10);
   gfx->drawString(x + 28, y, String(WxForecast[index].Period.substring(11,16)));
-  gfx->drawString(x + 28, y + 50, String(WxForecast[index].High,0) + "° / " + String(WxForecast[index].Low,0) + "°");
+  //gfx->drawString(x + 28, y + 50, String(WxForecast[index].High,0) + "° / " + String(WxForecast[index].Low,0) + "°");
+  gfx->drawString(x + 28, y + 50, String(WxForecast[index].Temperature,0) + "° / " + String(WxForecast[index].Rainfall,1) + (UNITS == "M" ? "mm" : "in"));
 }
 //#########################################################################################
 void draw_manager::Draw_Main_Wx(int x, int y, Forecast_record_type *WxConditions) {
@@ -200,8 +312,8 @@ void draw_manager::Draw_Main_Wx(int x, int y, Forecast_record_type *WxConditions
 //#########################################################################################
 void draw_manager::DrawWind(int x, int y, float angle, float windspeed) {
   int Cradius = 44;
-  float dx = Cradius * cos((angle - 90) * PI / 180) + x; // calculate X position
-  float dy = Cradius * sin((angle - 90) * PI / 180) + y; // calculate Y position
+  // float dx = Cradius * cos((angle - 90) * PI / 180) + x; // calculate X position
+  // float dy = Cradius * sin((angle - 90) * PI / 180) + y; // calculate Y position
   arrow(x, y, Cradius - 3, angle, 15, 15); // Show wind direction on outer circle
   gfx->drawCircle(x, y, Cradius + 2);
   gfx->drawCircle(x, y, Cradius + 3);

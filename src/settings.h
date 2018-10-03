@@ -26,7 +26,7 @@ static const int MAX_READINGS = 12;
 //http://api.openweathermap.org/data/2.5/forecast?q=Melksham,UK&APPID=your_OWM_API_key&mode=json&units=metric&cnt=40
 //http://api.openweathermap.org/data/2.5/weather?q=Melksham,UK&APPID=your_OWM_API_key&mode=json&units=metric&cnt=1
 //Set your location according to OWM locations
-static String CITY          = "Goeteborg";                      // Your home city See: http://bulk.openweathermap.org/sample/
+static String CITY          = "Göteborgs Kommun";                      // Your home city See: http://bulk.openweathermap.org/sample/
 static String COUNTRY       = "SE";                            // Your country  
 static String LANGUAGE      = "EN";                            // NOTE: Only the weather description (not used) is translated by OWM
                                                         // Arabic (AR) Czech (CZ) English (EN) Greek (EL) Persian(Farsi) (FA) Galician (GL) Hungarian (HU) Japanese (JA)

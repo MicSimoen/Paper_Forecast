@@ -40,6 +40,7 @@ class draw_manager{
         void Draw_Forecast_Weather(int x,
                                    int y,
                                    int index,
+                                   bool draw_frame,
                                    Forecast_record_type *WxForecast);
         void Draw_Main_Wx(int x, int y, Forecast_record_type *WxConditions);
         void DrawWind(int x, int y, float angle, float windspeed);
@@ -88,7 +89,12 @@ class draw_manager{
                         bool auto_scale,
                         bool barchart_mode);
         
+        void Draw_Weather(Forecast_record_type *WxConditions, Forecast_record_type *WxForecast);
+        void Draw_Condition_Section(int x, int y, Forecast_record_type *WxConditions, Forecast_record_type *WxForecast);
         void Draw_Wind_Section(int x, int y, float angle, float windspeed);
-        void Draw_Condition_Section(int x, int y, Forecast_record_type *WxConditions);
+        void Draw_Rain_Section(int x, int y, float rain);
+        void Draw_Pressure_Section(int x, int y, float pressure, String trend);
+        void Draw_Description_Section(int x, int y, Forecast_record_type *WxConditions);
+        void Draw_NextDay_Section(int x, int y, Forecast_record_type *WxForeCast);
 };
 #endif // DRAW_MANAGER_H
