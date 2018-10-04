@@ -1,5 +1,7 @@
 #include "utils.h"
 
+#include "settings.h"
+#include "Forecast_record_type.h"
 #include <Arduino.h>
 #include <time.h>
 
@@ -76,10 +78,41 @@ String utils::WindDegToDirection(float winddirection) {
   return "?";
 }
 //#########################################################################################
+void utils::SetupTime(void) {
+  configTime(0, 0, "0.se.pool.ntp.org", "0.europe.pool.ntp.org", "time.nist.gov");
+  setenv("TZ", TIMEZONE, 1);
+  while (!time(nullptr)) {
+    Serial.print(".");
+    delay(1000);
+  }
+  Serial.println("NTP Time Received!");
+}
+//#########################################################################################
+void utils::UpdateLocalTime(String &Day_time_str, String &time_str) {
+    struct tm *timeinfo;
+
+    time_t now = time(nullptr);
+    timeinfo = localtime (&now);
+
+    //See http://www.cplusplus.com/reference/ctime/strftime/
+    //Serial.println(timeinfo, "%a %b %d %Y   %H:%M:%S");     // Displays: Saturday, June 24 2017 14:05:49
+    //Serial.println(&timeinfo, "%H:%M:%S");                     // Displays: 14:05:49
+    char output[30], day_output[30];
+    if (UNITS == "M") {
+        strftime(day_output, 30, "%a  %d-%b-%y", timeinfo);     // Displays: Sat 24-Jun-17
+        strftime(output, 30, "(@ %H:%M:%S )", timeinfo);        // Creates: '@ 14:05:49'
+    }
+    else {
+        strftime(day_output, 30, "%a  %b-%d-%y", timeinfo);     // Creates: Sat Jun-24-17
+        strftime(output, 30, "(@ %r )", timeinfo);              // Creates: '@ 2:05:49pm'
+    }
+    Day_time_str = day_output;
+    time_str     = output;
+}
+//#########################################################################################
 String utils::ConvertUnixTime(int unix_time, String Units, int &MoonDay, int &MoonMonth, int &MoonYear) {
   struct tm *now_tm;
   int hour, min, second, day, month, year, wday;
-  // timeval tv = {unix_time,0};
   time_t tm = unix_time;
   now_tm = localtime(&tm);
   hour   = now_tm->tm_hour;
@@ -107,4 +140,9 @@ String utils::ConvertUnixTime(int unix_time, String Units, int &MoonDay, int &Mo
   // Returns either '21:12  ' or ' 09:12pm' depending on Units
   //Serial.println(time_str);
   return time_str;
+}
+//#########################################################################################
+void utils::Convert_Readings_to_Imperial(Forecast_record_type *WxConditions, Forecast_record_type *WxForecast) {
+  WxConditions[0].Pressure    = WxConditions[0].Pressure * 0.02953; //  hPa to ins
+  WxForecast[1].Rainfall      = WxForecast[1].Rainfall * 0.0393701; // mm to inches of rainfall
 }

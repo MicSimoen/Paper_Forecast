@@ -45,7 +45,8 @@ static char* TIMEZONE = "CET-1CEST,M3.5.0,M10.5.0/3";  // Choose your time zone 
 //char* Timezone = "EET-2EEST,M3.5.5/0,M10.5.5/0";     // Asia
 //char* Timezone = "ACST-9:30ACDT,M10.1.0,M4.1.0/3":   // Australia
 
-
+//Update Interval Settings
+const unsigned long UPDATE_INTERVAL = (20L * 60L) * 1000000L; // Delay between updates, in microseconds, WU allows 500 requests per-day maximum, set to every 15-mins or more
 
 // LOLIN D1 MINI PRO
 static uint8_t EPD_BUSY = 4;

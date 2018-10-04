@@ -75,16 +75,36 @@ void draw_manager::Draw_Condition_Section(int x, int y, Forecast_record_type *Wx
     gfx->setColor(EPD_WHITE);
     gfx->setTextAlignment(TEXT_ALIGN_CENTER);
     gfx->setFont(ArialRoundedMTBold_36);
-    gfx->drawString(x + 65, y + 155, String(WxConditions[0].Temperature,1) + "°" + (UNITS=="M"?"C":"F")); // Show current Temperature
+    gfx->drawString(x + 65, y + 145, String(WxConditions[0].Temperature,1) + "°" + (UNITS=="M"?"C":"F")); // Show current Temperature
     gfx->setFont(ArialMT_Plain_24);
-    gfx->drawString(x + 65, y + 200, String(min_temp,0) + "° | " + String(max_temp,0) + "°"); // Show forecast high and Low
+    gfx->drawString(x + 65, y + 190, String(min_temp,0) + "° | " + String(max_temp,0) + "°"); // Show forecast high and Low
     gfx->setFont(ArialRoundedMTBold_14);
-    gfx->drawString(x + 65, y + 250, utils::ConvertUnixTime(WxConditions[0].Sunrise,
+    float sun_radius = 5;
+    float x_start, x_end, y_start, y_end;
+    for(int i=0; i < 2; i++){
+        gfx->fillCircle(x + 40 + (i * 50), y + 255, sun_radius);
+        for(float angle=0; angle<360; angle+=30) {
+            x_start = (sun_radius + 3) * cos((angle - 90) * PI / 180) + x + 40 + (i * 50); // calculate X position
+            y_start = (sun_radius + 3) * sin((angle - 90) * PI / 180) + y + 255; // calculate Y position
+            x_end = (sun_radius + 8) * cos((angle - 90) * PI / 180) + x + 40 + (i * 50); // calculate X position
+            y_end = (sun_radius + 8) * sin((angle - 90) * PI / 180) + y + 255; // calculate Y position
+            gfx->drawLine(x_start, y_start, x_end, y_end);
+        }
+        gfx->setColor(EPD_BLACK);
+        gfx->fillRect(x + 25 + (i * 50), y + 257, 30, 15);
+        gfx->setColor(EPD_WHITE);
+        gfx->drawLine(x + 20 + (i * 50), y + 258, x + 60 + (i * 50), y + 258);
+    }
+   
+    int MoonDay, MoonMonth, MoonYear;
+    arrow(x + 40, y + 236, 0, 0, 5, 5);
+    gfx->drawString(x + 40, y + 260, utils::ConvertUnixTime(WxConditions[0].Sunrise,
                                                             UNITS,
                                                             MoonDay,
                                                             MoonMonth,
-                                                            MoonYear).substring(0, 5) +  " | " +
-                                     utils::ConvertUnixTime(WxConditions[0].Sunset,
+                                                            MoonYear).substring(0, 5));
+    arrow(x + 90, y + 230, 0, 0, 6, -6);
+    gfx->drawString(x + 90, y + 260, utils::ConvertUnixTime(WxConditions[0].Sunset,
                                                             UNITS,
                                                             MoonDay,
                                                             MoonMonth,

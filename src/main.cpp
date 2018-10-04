@@ -21,19 +21,18 @@
 #include <Arduino.h>
 #include "owm_credentials2.h"  // See 'owm_credentials' tab and enter your OWM API key and set the Wifi SSID and PASSWORD
 #include "settings.h"
+#include "utils.h"
 #include "Forecast_record_type.h"
 #include "draw_manager.h"
 #include <ArduinoJson.h>       // https://github.com/bblanchon/ArduinoJson NOTE: *** MUST BE Version-6 or above ***
 #include <ESP8266WiFi.h>       // Built-in
-#include "time.h"              // Built-in
-#include <SPI.h>               // Built-in 
+//#include "time.h"              // Built-in
+#include <SPI.h>               // Built-in
 
 //################  VERSION  ##########################
 String version = "1";       // Version of this program
 //################ VARIABLES ###########################
 
-const unsigned long UpdateInterval = (30L * 60L - 3) * 1000000L; // Delay between updates, in microseconds, WU allows 500 requests per-day maximum, set to every 15-mins or more
-bool LargeIcon   =  true;
 String time_str, Day_time_str, rxtext; // strings to hold time and received weather data;
 int    wifisection, displaysection, MoonDay, MoonMonth, MoonYear;
 int    Sunrise, Sunset;
@@ -51,10 +50,7 @@ WiFiClient client; // wifi client object
 
 //#########################################################################################
 void begin_sleep(){
-  //esp_sleep_enable_timer_wakeup(UpdateInterval);
-  //esp_deep_sleep_start(); // Sleep for e.g. 30 minutes
-
-  delay(UpdateInterval);
+  ESP.deepSleep(UPDATE_INTERVAL);
 }
 //#########################################################################################
 void Display_Weather(draw_manager *Draw_Manager) {              // 4.2" e-paper display is 400x300 resolution
@@ -64,11 +60,6 @@ void Display_Weather(draw_manager *Draw_Manager) {              // 4.2" e-paper 
   // Draw_Manager->Draw_Forecast_Section(230, 18,
   //  pressure_readings, rain_readings, temperature_readings, WxForecast);     // 3hr forecast boxes
   // Draw_Manager->Draw_Astronomy_Section(230, 20, WxConditions);    // Astronomy section Sun rise/set, Moon phase and Moon icon
-}
-//#########################################################################################
-void Convert_Readings_to_Imperial() {
-  WxConditions[0].Pressure    = WxConditions[0].Pressure * 0.02953; //  hPa to ins
-  WxForecast[1].Rainfall      = WxForecast[1].Rainfall * 0.0393701; // mm to inches of rainfall
 }
 //#########################################################################################
 // Problems with stucturing JSON decodes, see here: https://arduinojson.org/assistant/
@@ -143,7 +134,7 @@ bool DecodeWeather(Stream &json_stream, String Type) {
     if (pressure_trend < 0)  WxConditions[0].Trend = "-";
     if (pressure_trend == 0) WxConditions[0].Trend = "0";
 
-    if (UNITS == "I") Convert_Readings_to_Imperial();
+    if (UNITS == "I") utils::Convert_Readings_to_Imperial(WxConditions, WxForecast);
   }
   return true;
 }
@@ -170,39 +161,6 @@ void StopWiFi() {
   WiFi.disconnect();
   WiFi.mode(WIFI_OFF);
   wifisection    = millis() - wifisection;
-}
-//#########################################################################################
-void UpdateLocalTime() {
-    struct tm *timeinfo;
-
-    time_t now = time(nullptr);
-    timeinfo = localtime (&now);
-
-    //See http://www.cplusplus.com/reference/ctime/strftime/
-    //Serial.println(timeinfo, "%a %b %d %Y   %H:%M:%S");     // Displays: Saturday, June 24 2017 14:05:49
-    //Serial.println(&timeinfo, "%H:%M:%S");                     // Displays: 14:05:49
-    char output[30], day_output[30];
-    if (UNITS == "M") {
-        strftime(day_output, 30, "%a  %d-%b-%y", timeinfo);     // Displays: Sat 24-Jun-17
-        strftime(output, 30, "(@ %H:%M:%S )", timeinfo);        // Creates: '@ 14:05:49'
-    }
-    else {
-        strftime(day_output, 30, "%a  %b-%d-%y", timeinfo);     // Creates: Sat Jun-24-17
-        strftime(output, 30, "(@ %r )", timeinfo);              // Creates: '@ 2:05:49pm'
-    }
-    Day_time_str = day_output;
-    time_str     = output;
-}
-//#########################################################################################
-void SetupTime() {
-  configTime(7200, 3600, "0.se.pool.ntp.org", "0.europe.pool.ntp.org", "time.nist.gov");
-  //setenv("TZ", TIMEZONE, 1);
-  while (!time(nullptr)) {
-    Serial.print(".");
-    delay(1000);
-  }
-  Serial.println("NTP Time Received!");
-  UpdateLocalTime();
 }
 //#########################################################################################
 bool obtain_wx_data(String RequestType) {
@@ -251,7 +209,8 @@ bool obtain_wx_data(String RequestType) {
 void setup() {
   Serial.begin(115200);
   StartWiFi();
-  SetupTime();
+  utils::SetupTime();
+  utils::UpdateLocalTime(Day_time_str, time_str);
   draw_manager Draw_Manager(SCREEN_WIDTH, SCREEN_HEIGHT, BITS_PER_PIXEL, PALETTE);
   bool Received_WxData_OK = false;
   Received_WxData_OK = (obtain_wx_data("weather") && obtain_wx_data("forecast"));
@@ -263,8 +222,11 @@ void setup() {
     Draw_Manager.Commit();
     delay(2000);
   }
-  UpdateLocalTime();
+  utils::UpdateLocalTime(Day_time_str, time_str);
   Serial.println(F("Starting deep-sleep period..."));
+  //Used during development to allow easier FW flashing
+  delay(60000);
+  /////////////////////////////////////////////////////
   begin_sleep();
 }
 //#########################################################################################
