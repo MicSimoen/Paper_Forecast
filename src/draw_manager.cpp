@@ -79,6 +79,16 @@ void draw_manager::Draw_Condition_Section(int x, int y, Forecast_record_type *Wx
     gfx->setFont(ArialMT_Plain_24);
     gfx->drawString(x + 65, y + 200, String(min_temp,0) + "° | " + String(max_temp,0) + "°"); // Show forecast high and Low
     gfx->setFont(ArialRoundedMTBold_14);
+    gfx->drawString(x + 65, y + 250, utils::ConvertUnixTime(WxConditions[0].Sunrise,
+                                                            UNITS,
+                                                            MoonDay,
+                                                            MoonMonth,
+                                                            MoonYear).substring(0, 5) +  " | " +
+                                     utils::ConvertUnixTime(WxConditions[0].Sunset,
+                                                            UNITS,
+                                                            MoonDay,
+                                                            MoonMonth,
+                                                            MoonYear).substring(0, 5));
     gfx->setTextAlignment(TEXT_ALIGN_LEFT);
     gfx->setColor(EPD_BLACK);
     
