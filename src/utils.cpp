@@ -79,13 +79,14 @@ String utils::WindDegToDirection(float winddirection) {
 }
 //#########################################################################################
 void utils::SetupTime(void) {
-  configTime(0, 0, "0.se.pool.ntp.org", "0.europe.pool.ntp.org", "time.nist.gov");
-  setenv("TZ", TIMEZONE, 1);
-  while (!time(nullptr)) {
-    Serial.print(".");
-    delay(1000);
-  }
-  Serial.println("NTP Time Received!");
+    Serial.println("Setup time");
+    configTime(0, 0, "0.se.pool.ntp.org", "0.europe.pool.ntp.org", "time.nist.gov");
+    setenv("TZ", TIMEZONE, 1);
+    while (!time(nullptr)) {
+        Serial.print(".");
+        delay(1000);
+    }
+    Serial.println("\nNTP Time Received!");
 }
 //#########################################################################################
 void utils::UpdateLocalTime(String &Day_time_str, String &time_str) {
@@ -108,6 +109,10 @@ void utils::UpdateLocalTime(String &Day_time_str, String &time_str) {
     }
     Day_time_str = day_output;
     time_str     = output;
+    String printTime;
+    strftime(output, 30, "Current time: %H:%M:%S", timeinfo);
+    printTime = output;
+    Serial.println(printTime);
 }
 //#########################################################################################
 String utils::ConvertUnixTime(int unix_time, String Units, int &MoonDay, int &MoonMonth, int &MoonYear) {

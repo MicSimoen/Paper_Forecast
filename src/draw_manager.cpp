@@ -482,7 +482,7 @@ void draw_manager::arrow(int x, int y, int asize, float aangle, int pwidth, int 
 //#########################################################################################
 void draw_manager::DisplayWXicon(int x, int y, String IconName, bool LargeSize, bool invert_color) {
   gfx->setTextAlignment(TEXT_ALIGN_CENTER);
-  Serial.println(IconName);
+  // Serial.println(IconName);
     if      (IconName == "01d" || IconName == "01n")  Sunny(x, y, LargeSize, invert_color, IconName);
     else if (IconName == "02d" || IconName == "02n")  MostlySunny(x, y, LargeSize, invert_color, IconName);
     else if (IconName == "03d" || IconName == "03n")  Cloudy(x, y, LargeSize, invert_color, IconName);
