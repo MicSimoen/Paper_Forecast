@@ -31,7 +31,21 @@ void draw_manager::Commit(void){
     gfx->commit();
 }
 
+void draw_manager::DrawTest(void){
+    gfx->setColor(EPD_BLACK);
+    gfx->fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    gfx->setColor(EPD_WHITE);
+    gfx->fillRect(10, 10, SCREEN_WIDTH-20, SCREEN_HEIGHT-20);
+    gfx->setColor(EPD_BLACK);
+    gfx->fillRect(30, 30, SCREEN_WIDTH-60, SCREEN_HEIGHT-60);
+    gfx->setColor(EPD_YELLOW);
+    gfx->fillCircle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 100);
+}
+
 void draw_manager::Draw_Heading_Section(String Day_time_str, String time_str) {
+    gfx->setColor(EPD_WHITE);
+    gfx->fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    gfx->setColor(EPD_BLACK);
     gfx->setFont(ArialRoundedMTBold_14);
     gfx->setTextAlignment(TEXT_ALIGN_CENTER);
     gfx->drawString(screen_width / 2, -3, CITY);
@@ -82,6 +96,7 @@ void draw_manager::Draw_Condition_Section(int x, int y, Forecast_record_type *Wx
     float sun_radius = 5;
     float x_start, x_end, y_start, y_end;
     for(int i=0; i < 2; i++){
+        gfx->setColor(EPD_YELLOW);
         gfx->fillCircle(x + 40 + (i * 50), y + 255, sun_radius);
         for(float angle=0; angle<360; angle+=30) {
             x_start = (sun_radius + 3) * cos((angle - 90) * PI / 180) + x + 40 + (i * 50); // calculate X position
@@ -548,10 +563,8 @@ void draw_manager::addsnow(int x, int y, int scale, bool invert_color) {
     }
 }
 //#########################################################################################
-void draw_manager::addtstorm(int x, int y, int scale, bool invert_color) {
-    if (invert_color) {
-        gfx->setColor(EPD_WHITE);
-    }
+void draw_manager::addtstorm(int x, int y, int scale) {
+    gfx->setColor(EPD_YELLOW);
     y = y + scale / 2;
     for (int i = 0; i < 5; i++) {
         gfx->drawLine(x - scale * 4 + scale * i * 1.5 + 0, y + scale * 1.5, x - scale * 3.5 + scale * i * 1.5 + 0, y + scale);
@@ -570,24 +583,15 @@ void draw_manager::addtstorm(int x, int y, int scale, bool invert_color) {
             gfx->drawLine(x - scale * 3.5 + scale * i * 1.4 + 2, y + scale * 2.5, x - scale * 3 + scale * i * 1.5 + 2, y + scale * 1.5);
         }
     }
-    if (invert_color) {
-        gfx->setColor(EPD_BLACK);
-    }
+    gfx->setColor(EPD_BLACK);
 }
 //#########################################################################################
-void draw_manager::addsun(int x, int y, int scale, bool invert_color) {
-    if (invert_color) {
-        gfx->setColor(EPD_WHITE);
-    }
+void draw_manager::addsun(int x, int y, int scale) {
+    gfx->setColor(EPD_YELLOW);
     int linesize = 3;
     if (scale == SMALL) linesize = 1;
     int dxo, dyo, dxi, dyi;
     gfx->fillCircle(x, y, scale);
-    if (!invert_color) {
-        gfx->setColor(EPD_WHITE);
-        gfx->fillCircle(x, y, scale - linesize);
-        gfx->setColor(EPD_BLACK);
-    }
     for (float i = 0; i < 360; i = i + 45) {
         dxo = 2.2 * scale * cos((i - 90) * 3.14 / 180); dxi = dxo * 0.6;
         dyo = 2.2 * scale * sin((i - 90) * 3.14 / 180); dyi = dyo * 0.6;
@@ -613,9 +617,7 @@ void draw_manager::addsun(int x, int y, int scale, bool invert_color) {
             }
         }
     }
-    if (invert_color) {
-        gfx->setColor(EPD_BLACK);
-    }
+    gfx->setColor(EPD_BLACK);
 }
 //#########################################################################################
 void draw_manager::addfog(int x, int y, int scale, int linesize, bool invert_color) {
@@ -641,7 +643,7 @@ void draw_manager::MostlyCloudy(int x, int y, bool LargeSize, bool invert_color,
   if (scale == SMALL) linesize = 1;
   if (IconName.endsWith("n")) addmoon(x,y,scale, invert_color);
   addcloud(x, y, scale, linesize);
-  addsun(x - scale * 1.8, y - scale * 1.8, scale, invert_color);
+  addsun(x - scale * 1.8, y - scale * 1.8, scale);
   addcloud(x, y, scale, linesize);
 }
 //#########################################################################################
@@ -652,7 +654,7 @@ void draw_manager::MostlySunny(int x, int y, bool LargeSize, bool invert_color, 
   if (scale == SMALL) linesize = 1;
   if (IconName.endsWith("n")) addmoon(x,y,scale, invert_color);
   addcloud(x, y, scale, linesize);
-  addsun(x - scale * 1.8, y - scale * 1.8, scale, invert_color);
+  addsun(x - scale * 1.8, y - scale * 1.8, scale);
 }
 //#########################################################################################
 void draw_manager::Rain(int x, int y, bool LargeSize, bool invert_color, String IconName) {
@@ -688,7 +690,7 @@ void draw_manager::Sunny(int x, int y, bool LargeSize, bool invert_color, String
     if (LargeSize) scale = LARGE;
     if (IconName.endsWith("n")) addmoon(x,y,scale, invert_color);
     scale = scale * 1.5;
-    addsun(x, y, scale, invert_color);
+    addsun(x, y, scale);
 }
 //#########################################################################################
 void draw_manager::ExpectRain(int x, int y, bool LargeSize, bool invert_color, String IconName) {
@@ -697,7 +699,7 @@ void draw_manager::ExpectRain(int x, int y, bool LargeSize, bool invert_color, S
   int linesize = 3;
   if (scale == SMALL) linesize = 1;
   if (IconName.endsWith("n")) addmoon(x,y,scale, invert_color);
-  addsun(x - scale * 1.8, y - scale * 1.8, scale, invert_color);
+  addsun(x - scale * 1.8, y - scale * 1.8, scale);
   addcloud(x, y, scale, linesize);
   addrain(x, y, scale, invert_color);
 }
@@ -708,7 +710,7 @@ void draw_manager::ChanceRain(int x, int y, bool LargeSize, bool invert_color, S
   int linesize = 3;
   if (scale == SMALL) linesize = 1;
   if (IconName.endsWith("n")) addmoon(x,y,scale, invert_color);
-  addsun(x - scale * 1.8, y - scale * 1.8, scale, invert_color);
+  addsun(x - scale * 1.8, y - scale * 1.8, scale);
   addcloud(x, y, scale, linesize);
   addrain(x, y, scale, invert_color);
 }
@@ -720,7 +722,7 @@ void draw_manager::Tstorms(int x, int y, bool LargeSize, bool invert_color, Stri
   if (scale == SMALL) linesize = 1;
   if (IconName.endsWith("n")) addmoon(x,y,scale, invert_color);
   addcloud(x, y, scale, linesize);
-  addtstorm(x, y, scale, invert_color);
+  addtstorm(x, y, scale);
 }
 //#########################################################################################
 void draw_manager::Snow(int x, int y, bool LargeSize, bool invert_color, String IconName) {
@@ -749,7 +751,7 @@ void draw_manager::Haze(int x, int y, bool LargeSize, bool invert_color, String 
   int linesize = 3;
   if (scale == SMALL) linesize = 1;
   if (IconName.endsWith("n")) addmoon(x,y,scale, invert_color);
-  addsun(x, y, scale*1.4, invert_color);
+  addsun(x, y, scale*1.4);
   addfog(x, y, scale*1.4, linesize, invert_color);
 }
 //#########################################################################################

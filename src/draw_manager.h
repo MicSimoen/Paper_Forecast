@@ -27,6 +27,8 @@ class draw_manager{
         
         void Commit(void);
 
+        void DrawTest(void);
+
         void Draw_Heading_Section(String Day_time_str, String time_str);
         void Draw_Main_Weather_Section(int x,
                                        int y,
@@ -60,8 +62,8 @@ class draw_manager{
         void addcloud(int x, int y, int scale, int linesize);
         void addrain(int x, int y, int scale, bool invert_color);
         void addsnow(int x, int y, int scale, bool invert_color);
-        void addtstorm(int x, int y, int scale, bool invert_color);
-        void addsun(int x, int y, int scale, bool invert_color);
+        void addtstorm(int x, int y, int scale);
+        void addsun(int x, int y, int scale);
         void addfog(int x, int y, int scale, int linesize, bool invert_color);
         void MostlyCloudy(int x, int y, bool LargeSize, bool invert_color, String IconName);
         void MostlySunny(int x, int y, bool LargeSize, bool invert_color, String IconName);

@@ -133,7 +133,7 @@ int EPD_WaveShare42BC::IfInit(void) {
 
 
 void EPD_WaveShare42BC::writeBuffer(uint8_t *buffer, uint8_t bitsPerPixel, uint16_t *palette, uint16_t x, uint16_t y, uint16_t bufferWidth, uint16_t bufferHeight) {
-  DisplayFrame(buffer);
+  DisplayFrame(buffer, bitsPerPixel, palette);
 }
 
 /**
@@ -217,36 +217,17 @@ void EPD_WaveShare42BC::SetPartialWindow(const unsigned char* buffer_black, cons
 /**
  * @brief: refresh and displays the frame
  */
-void EPD_WaveShare42BC::DisplayFrame(const unsigned char* frame_buffer) {
+void EPD_WaveShare42BC::DisplayFrame(const unsigned char* frame_buffer, uint8_t bitsPerPixel, uint16_t* palette) {
     uint16_t x = 0;
     uint16_t y = 0;
-    int x_end;
-    int y_end;
-    uint16_t image_width = width;
-    uint16_t image_height = height;
-    uint16_t bufferSize = width * height / 8;
     uint16_t xDot = bufferWidth;
     uint16_t yDot = bufferHeight;
     uint8_t data;
 
     if (frame_buffer != NULL) {
-        /*SendCommand(DATA_START_TRANSMISSION_1);
-        for(int i = 0; i < width / 8 * height; i++) {
-            SendData(0xFF);      // bit set: white, bit reset: black
-        }
-        DelayMs(2);*/
-        /*SendCommand(DATA_START_TRANSMISSION_2);
-        for(int i = 0; i < width / 8 * height; i++) {
-            SendData(reverse(frame_buffer[i]));
-        }
-        DelayMs(2);*/
-        SendCommand(DATA_START_TRANSMISSION_2);
-        DelayMs(2);
-        for(int i = 0; i < width / 8 * height; i++) {
-            SendData(0xFF);      // bit set: white, bit reset: black
-        }
-        DelayMs(2);
+        //Black - White
         SendCommand(DATA_START_TRANSMISSION_1);
+        DelayMs(2);
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < (width) / 8; j++) {
 
@@ -271,13 +252,54 @@ void EPD_WaveShare42BC::DisplayFrame(const unsigned char* frame_buffer) {
                       y = bufferHeight - (j * 8 + b);
                       break;
                   }
-                  data = data | (getPixel(frame_buffer, x, y) & 1);
-
+                  uint8_t byteValue = getPixel(frame_buffer, x, y, bitsPerPixel);
+                  if (byteValue >= 0 && byteValue <= 2) {
+                      data |= ((((uint8_t) palette[ byteValue ])) & 1);
+                  }
                 }
                 SendData(data);
-                //SendData(reverse(buffer[(i + j * (image_width / 8))]));
-                //SendData(i);
                 yield();
+            }
+        }
+        DelayMs(2);
+        //Yellow - White
+        SendCommand(DATA_START_TRANSMISSION_2);
+        if (bitsPerPixel == 1){
+            for (int i = 0; i < width / 8 * height; i++) {
+                SendData(0xFF); //Turn the yellow buffer off (Set to White)
+            }
+        } else {
+            for (int i = 0; i < height; i++) {
+                for (int j = 0; j < (width) / 8; j++) {
+                    data = 0;
+                    for (int b = 0; b < 8; b++) {
+                    data = data << 1;
+                    switch (rotation) {
+                        case 0:
+                        x = (j * 8 + b);
+                        y = i;
+                        break;
+                        case 1:
+                        x = bufferWidth - i;
+                        y = (j * 8 + b);
+                        break;
+                        case 2:
+                        x = xDot - (j * 8 + b);
+                        y = yDot - i;
+                        break;
+                        case 3:
+                        x = i;
+                        y = bufferHeight - (j * 8 + b);
+                        break;
+                    }
+                    uint8_t byteValue = getPixel(frame_buffer, x, y, bitsPerPixel);
+                    if (byteValue >= 0 && byteValue <= 2) {
+                        data |= (((uint8_t) palette[ byteValue ] >> 1) & 1);
+                    }
+                    }
+                    SendData(data);
+                    yield();
+                }
             }
         }
     }
@@ -287,11 +309,13 @@ void EPD_WaveShare42BC::DisplayFrame(const unsigned char* frame_buffer) {
     WaitUntilIdle();
 }
 
-uint8_t EPD_WaveShare42BC::getPixel(const unsigned char *buffer, uint16_t x, uint16_t y) {
-  uint8_t bitsPerPixel = 1;
+uint8_t EPD_WaveShare42BC::getPixel(const unsigned char *buffer, uint16_t x, uint16_t y, uint8_t bitsPerPixel) {
   uint8_t bitMask = (1 << bitsPerPixel) - 1;
   uint8_t pixelsPerByte = 8 / bitsPerPixel;
   uint8_t bitShift = 3;
+  if (bitsPerPixel == 2){
+      bitShift = 2;
+  }
 
   if (x >= bufferWidth || y >= bufferHeight) return 0;
   // bitsPerPixel: 8, pixPerByte: 1, 0  1 = 2^0

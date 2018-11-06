@@ -104,12 +104,12 @@ class EPD_WaveShare42BC : public DisplayDriver {
     void SetPartialWindowBlack(const unsigned char* buffer_black, int x, int y, int w, int l);
     void SetPartialWindowRed(const unsigned char* buffer_red, int x, int y, int w, int l);
     void SetLut(void);
-    void DisplayFrame(const unsigned char* frame_buffer);
+    void DisplayFrame(const unsigned char* frame_buffer, uint8_t bitsPerPixel, uint16_t* palette);
     void DisplayFrame(void);
     void ClearFrame(void);
     void Sleep(void);
     void setFastRefresh(boolean isFastRefreshEnabled);
-    uint8_t getPixel(const unsigned char* buffer, uint16_t x, uint16_t y);
+    uint8_t getPixel(const unsigned char* buffer, uint16_t x, uint16_t y, uint8_t bitsPerPixel);
 
     uint8_t reverse(uint8_t in);
 

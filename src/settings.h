@@ -8,10 +8,11 @@ static int SMALL = 4;
 static int LARGE = 14;
 static float SCREEN_WIDTH = 400.0;    // Set for landscape mode, don't remove the decimal place!
 static float SCREEN_HEIGHT = 300.0;
-static uint8_t BITS_PER_PIXEL = 1;
-static int EPD_BLACK = 0;
-static int EPD_WHITE = 1;
-static uint16_t PALETTE[2] = {0, 1 };
+static uint8_t BITS_PER_PIXEL = 2;
+static int EPD_WHITE = 0;
+static int EPD_BLACK = 1;
+static int EPD_YELLOW = 2;
+static uint16_t PALETTE[3] = {3, 2, 1};
 
 static bool MAIN_WEATHER_LARGE_ICON = true;
 static bool FORECAST_LARGE_ICON = false;
@@ -22,7 +23,7 @@ static bool TEMP_BARCHART_ON = false;
 static bool RAIN_AUTOSCALE_ON = true;
 static bool RAIN_BARCHART_ON = true;
 
-static const int MAX_READINGS = 12;
+static const int MAX_READINGS = 8;
 //http://api.openweathermap.org/data/2.5/forecast?q=Melksham,UK&APPID=your_OWM_API_key&mode=json&units=metric&cnt=40
 //http://api.openweathermap.org/data/2.5/weather?q=Melksham,UK&APPID=your_OWM_API_key&mode=json&units=metric&cnt=1
 //Set your location according to OWM locations

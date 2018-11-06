@@ -178,7 +178,7 @@ bool obtain_wx_data(String RequestType) {
       apikey + "&mode=json&units="+units+"&lang="+LANGUAGE+" HTTP/1.1");
     else
       client.println("GET /data/2.5/" + RequestType + "?q=" + CITY + "," + COUNTRY + "&APPID=" + 
-      apikey + "&mode=json&units="+units+"&lang="+LANGUAGE+"&cnt=12 HTTP/1.1");
+      apikey + "&mode=json&units="+units+"&lang="+LANGUAGE+"&cnt=" + MAX_READINGS + " HTTP/1.1");
     client.println("Host: api.openweathermap.org");
     client.println("User-Agent: ESP OWM Receiver/1.1");
     client.println("Connection: close");
