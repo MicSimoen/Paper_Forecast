@@ -28,6 +28,7 @@ draw_manager::draw_manager(float screen_width_in,
 }
 
 void draw_manager::Commit(void){
+    Serial.println("Committing buffer to screen");
     gfx->commit();
 }
 
@@ -61,7 +62,7 @@ void draw_manager::Draw_Weather(Forecast_record_type *WxConditions, Forecast_rec
     Draw_Condition_Section(0, 15, WxConditions, WxForecast);
     Draw_Wind_Section(130, 18, WxConditions[0].Winddir, WxConditions[0].Windspeed);
     Draw_Rain_Section(261, 18, WxConditions[0].Rainfall);
-    Draw_Pressure_Section(330, 18, WxConditions[0].Pressure, WxConditions[0].Trend);
+    Draw_Pressure_Section(330, 18, WxConditions[0].Pressure, WxForecast[0].Trend);
     Draw_Description_Section(261, 90, WxConditions);
     Draw_NextDay_Section(130, 160, WxForecast);
 }
@@ -258,70 +259,6 @@ void draw_manager::Draw_NextDay_Section(int x, int y, Forecast_record_type *WxFo
     }
 }
 //#########################################################################################
-//#########################################################################################
-//#########################################################################################
-//#########################################################################################
-//#########################################################################################
-void draw_manager::Draw_Main_Weather_Section(int x,
-                                             int y,
-                                             Forecast_record_type *WxConditions) {
-    DisplayWXicon(x+5, y-5, WxConditions[0].Icon, MAIN_WEATHER_LARGE_ICON, false);
-    gfx->setFont(ArialRoundedMTBold_14);
-    DrawPressureTrend(x, y + 50, WxConditions[0].Pressure, WxConditions[0].Trend);
-    gfx->setTextAlignment(TEXT_ALIGN_CENTER);
-    Draw_Rain(x - 100, y + 35, WxConditions);
-    gfx->setFont(ArialMT_Plain_24);
-    gfx->setTextAlignment(TEXT_ALIGN_LEFT);
-    String Wx_Description = WxConditions[0].Main0;
-    if (WxConditions[0].Forecast0 != "") {
-        Wx_Description += " (" +  WxConditions[0].Forecast0;
-        if (WxConditions[0].Forecast1 != "" && \
-            WxConditions[0].Forecast1 != WxConditions[0].Forecast2) {
-            Wx_Description += " & " +  WxConditions[0].Forecast1 + ")";
-        } else {
-            Wx_Description += ")";
-        }
-    }
-    gfx->drawString(x - 170, y + 70, utils::TitleCase(Wx_Description));
-    Draw_Main_Wx(x -98, y - 1, WxConditions);
-    gfx->drawLine(0, y + 68, screen_width, y + 68);
-}
-//#########################################################################################
-void draw_manager::Draw_Forecast_Section(int x,
-                                         int y,
-                                         float *pressure_readings,
-                                         float *rain_readings,
-                                         float *temperature_readings,
-                                         Forecast_record_type *WxForecast) {
-  gfx->setFont(ArialMT_Plain_10);
-  Draw_Forecast_Weather(x, y, 0, true,  WxForecast);
-  Draw_Forecast_Weather(x + 56, y, 1, true,  WxForecast);
-  Draw_Forecast_Weather(x + 112, y, 2, true, WxForecast);
-  //       (x,y,width,height,MinValue, MaxValue, Title, Data Array, AutoScale, ChartMode)
-  for (int r = 1; r <= MAX_READINGS; r++) {
-    if (UNITS == "I") pressure_readings[r] = WxForecast[r].Pressure * 0.02953;  
-    else              pressure_readings[r] = WxForecast[r].Pressure;
-    temperature_readings[r] = WxForecast[r].Temperature;
-    if (UNITS == "I") rain_readings[r]     = WxForecast[r].Rainfall * 0.0393701;
-    else              rain_readings[r]     = WxForecast[r].Rainfall;
-  }
-  gfx->drawLine(0, y + 173, screen_width, y + 173);
-  gfx->setTextAlignment(TEXT_ALIGN_CENTER);
-  gfx->setFont(ArialRoundedMTBold_14);
-  gfx->drawString(x - 40, y + 173, "3-Day Forecast Values");
-  gfx->setTextAlignment(TEXT_ALIGN_LEFT);
-  gfx->setFont(ArialMT_Plain_10);
-  DrawGraph(screen_width/400*30, screen_height/300*222, screen_width/400*100, screen_height/300*60,
-            900,1050,"Pressure", pressure_readings, MAX_READINGS,
-            PRES_AUTOSCALE_ON, PRES_BARCHART_ON);
-  DrawGraph(screen_width/400*158, screen_height/300*222, screen_width/400*100, screen_height/300*60,
-            10,30, "Temperature", temperature_readings, MAX_READINGS,
-            TEMP_AUTOSCALE_ON, TEMP_BARCHART_ON);
-  DrawGraph(screen_width/400*288, screen_height/300*222, screen_width/400*100, screen_height/300*60,
-            0,30, "Rainfall", rain_readings, MAX_READINGS,
-            RAIN_AUTOSCALE_ON, RAIN_BARCHART_ON);
-}
-//#########################################################################################
 void draw_manager::Draw_Forecast_Weather(int x,
                                          int y,
                                          int index,
@@ -338,65 +275,9 @@ void draw_manager::Draw_Forecast_Weather(int x,
   gfx->setFont(ArialMT_Plain_10);
   gfx->drawString(x + 28, y, String(WxForecast[index].Period.substring(11,16)));
   //gfx->drawString(x + 28, y + 50, String(WxForecast[index].High,0) + "° / " + String(WxForecast[index].Low,0) + "°");
-  gfx->drawString(x + 28, y + 50, String(WxForecast[index].Temperature,0) + "° / " + String(WxForecast[index].Rainfall,1) + (UNITS == "M" ? "mm" : "in"));
-}
-//#########################################################################################
-void draw_manager::Draw_Main_Wx(int x, int y, Forecast_record_type *WxConditions) {
-  DrawWind(x, y, WxConditions[0].Winddir, WxConditions[0].Windspeed);
-  gfx->setTextAlignment(TEXT_ALIGN_CENTER);
-  gfx->setFont(ArialRoundedMTBold_14);
-  gfx->drawString(x, y - 28, String(WxConditions[0].High,0) + "° | " + String(WxConditions[0].Low,0) + "°"); // Show forecast high and Low
-  gfx->setFont(ArialMT_Plain_24);
-  gfx->drawString(x - 5, y - 10, String(WxConditions[0].Temperature,1) + "°"); // Show current Temperature
-  gfx->setFont(ArialRoundedMTBold_14);
-  gfx->setTextAlignment(TEXT_ALIGN_LEFT);  
-  gfx->drawString(x+String(WxConditions[0].Temperature,1).length()*11/2,y-9,UNITS=="M"?"C":"F"); // Add in smaller Temperature unit
-  gfx->setFont(ArialRoundedMTBold_14);
-  gfx->setTextAlignment(TEXT_ALIGN_LEFT);
-}
-//#########################################################################################
-void draw_manager::DrawWind(int x, int y, float angle, float windspeed) {
-  int Cradius = 44;
-  // float dx = Cradius * cos((angle - 90) * PI / 180) + x; // calculate X position
-  // float dy = Cradius * sin((angle - 90) * PI / 180) + y; // calculate Y position
-  arrow(x, y, Cradius - 3, angle, 15, 15); // Show wind direction on outer circle
-  gfx->drawCircle(x, y, Cradius + 2);
-  gfx->drawCircle(x, y, Cradius + 3);
-  gfx->setTextAlignment(TEXT_ALIGN_CENTER);
-  gfx->setFont(ArialRoundedMTBold_14);
-  gfx->drawString(x, y + Cradius - 25, utils::WindDegToDirection(angle));
-  gfx->setFont(ArialMT_Plain_10);
-  gfx->drawString(x - Cradius + 3, y - Cradius - 6, String(windspeed,1) + (UNITS == "M" ? " m/s" : " mph"));
-  gfx->setTextAlignment(TEXT_ALIGN_LEFT);
-}
-//#########################################################################################
-void draw_manager::DrawPressureTrend(int x, int y, float pressure, String slope) {
-  gfx->setTextAlignment(TEXT_ALIGN_CENTER);
-  gfx->drawString(x, y, String(pressure,1) + (UNITS == "M" ? "mb" : "in"));
-  x = x + 45; y = y + 8;
-  if      (slope == "+") {
-    gfx->drawLine(x,  y,  x + 4, y - 4);
-    gfx->drawLine(x + 4, y - 4, x + 8, y);
-  }
-  else if (slope == "0") {
-    gfx->drawLine(x + 3, y - 4, x + 8, y);
-    gfx->drawLine(x + 3, y + 4, x + 8, y);
-  }
-  else if (slope == "-") {
-    gfx->drawLine(x,  y,  x + 4, y + 4);
-    gfx->drawLine(x + 4, y + 4, x + 8, y);
-  }
-}
-//#########################################################################################
-void draw_manager::Draw_Rain(int x, int y, Forecast_record_type *WxForecast) {
-    gfx->setFont(ArialRoundedMTBold_14);
-    gfx->setTextAlignment(TEXT_ALIGN_CENTER);
-    if (WxForecast[1].Rainfall > 0)
-    {
-        gfx->drawString(x, y + 14,
-            String(WxForecast[1].Rainfall,3) + (UNITS == "M" ? "mm" : "in") + " Rainfall");
-    } // Only display rainfall total today if > 0
-    gfx->setFont(ArialMT_Plain_10);
+  String temperature = String(round(WxForecast[index].Temperature), 0);
+  String rain = String(round(10 * WxForecast[index].Rainfall)/10, 1);
+  gfx->drawString(x + 28, y + 50, temperature + "° / " + rain + (UNITS == "M" ? "mm" : "in"));
 }
 //#########################################################################################
 void draw_manager::Draw_Astronomy_Section(int x,
@@ -811,99 +692,3 @@ void draw_manager::DrawBattery(int x, int y) {
     gfx->fillRect(x - 20, y + 4, 17 * percentage / 100.0, 6);
   }
 }
-
-//#########################################################################################
-/* (C) D L BIRD
-    This function will draw a graph on a ePaper/TFT/LCD display using data from an array containing data to be graphed.
-    The variable 'MAX_READINGS' determines the maximum number of data elements for each array. Call it with the following parametric data:
-    x_pos - the x axis top-left position of the graph
-    y_pos - the y-axis top-left position of the graph, e.g. 100, 200 would draw the graph 100 pixels along and 200 pixels down from the top-left of the screen
-    width - the width of the graph in pixels
-    height - height of the graph in pixels
-    Y1_Max - sets the scale of plotted data, for example 5000 would scale all data to a Y-axis of 5000 maximum
-    data_array1 is parsed by value, externally they can be called anything else, e.g. within the routine it is called data_array1, but externally could be temperature_readings
-    auto_scale - a logical value (TRUE or FALSE) that switches the Y-axis autoscale On or Off
-    barchart_on - a logical value (TRUE or FALSE) that switches the drawing mode between barhcart and line graph
-    barchart_colour - a sets the title and graph plotting colour
-    If called with Y!_Max value of 500 and the data never goes above 500, then autoscale will retain a 0-500 Y scale, if on, the scale increases/decreases to match the data.
-    auto_scale_margin, e.g. if set to 1000 then autoscale increments the scale by 1000 steps.
-*/
-void draw_manager::DrawGraph(int x_pos, int y_pos, int gwidth, int gheight,
-                             float Y1Min, float Y1Max, String title, float *DataArray,
-                             int readings, bool auto_scale, bool barchart_mode) {
-    #define auto_scale_margin 0 // Sets the autoscale increment, so axis steps up in units of e.g. 3
-    #define y_minor_axis 5      // 5 y-axis division markers
-    int maxYscale = -10000;
-    int minYscale =  10000;
-    int last_x, last_y;
-    float x1, y1, x2, y2;
-    if (auto_scale == true) {
-        for (int i = 1; i < readings; i++ ) {
-            if (DataArray[i] >= maxYscale) maxYscale = DataArray[i];
-            if (DataArray[i] <= minYscale) minYscale = DataArray[i];
-        }
-        // Auto scale the graph and round to the nearest value defined, default was Y1Max
-        maxYscale = round(maxYscale + auto_scale_margin); 
-        Y1Max = round(maxYscale+0.5);
-        if (minYscale != 0) {
-            // Auto scale the graph and round to the nearest value defined, default was Y1Min
-            minYscale = round(minYscale - auto_scale_margin);
-        }
-        Y1Min = round(minYscale);
-    }
-    // Draw the graph
-    last_x = x_pos + 1;
-    last_y = y_pos + (Y1Max - constrain(DataArray[1], Y1Min, Y1Max)) / (Y1Max - Y1Min) * gheight;
-    gfx->setColor(EPD_BLACK);
-    gfx->drawRect(x_pos, y_pos, gwidth + 3, gheight + 2);
-    gfx->setFont(ArialMT_Plain_10);
-    //gfx->setFont(ArialRoundedMTBold_14);
-    gfx->setTextAlignment(TEXT_ALIGN_CENTER);
-    gfx->drawString(x_pos + gwidth / 2, y_pos - 17, title);
-    gfx->setFont(ArialMT_Plain_10);
-    gfx->setTextAlignment(TEXT_ALIGN_RIGHT);
-    // Draw the data
-    for (int gx = 1; gx < readings; gx++) {
-        x1 = last_x;
-        y1 = last_y;
-        // MAX_READINGS is the global variable that sets the maximum data that can be plotted
-        x2 = x_pos + gx * gwidth/(readings-1)-1 ;
-        y2 = y_pos + (Y1Max - constrain(DataArray[gx], Y1Min, Y1Max)) / (Y1Max - Y1Min) * gheight + 1;
-        if (barchart_mode) {
-            gfx->fillRect(x2, y2, (gwidth/readings)-1, y_pos + gheight - y2 + 1);
-        } else {
-            gfx->drawLine(last_x, last_y, x2, y2);
-        }
-        last_x = x2;
-        last_y = y2;
-    }
-    //Draw the Y-axis scale
-    for (int spacing = 0; spacing <= y_minor_axis; spacing++) {
-        #define number_of_dashes 20
-        for (int j = 0; j < number_of_dashes; j++) { // Draw dashed graph grid lines
-            if (spacing < y_minor_axis) {
-                gfx->drawHorizontalLine((x_pos + 3 + j * gwidth / number_of_dashes),
-                                        y_pos + (gheight * spacing / y_minor_axis),
-                                        gwidth / (2 * number_of_dashes));
-            }
-        }
-        if ( (Y1Max-(float)(Y1Max-Y1Min)/y_minor_axis*spacing) < 10) {
-            gfx->drawString(x_pos-2, y_pos+gheight*spacing/y_minor_axis-5,
-                            String((Y1Max-(float)(Y1Max-Y1Min)/y_minor_axis*spacing+0.01), 1));
-        } else {
-            if (Y1Min < 1) {
-                gfx->drawString(x_pos - 2, y_pos + gheight * spacing / y_minor_axis - 5,
-                    String((Y1Max - (float)(Y1Max - Y1Min) / y_minor_axis * spacing+0.01), 1));
-            } else {
-                gfx->drawString(x_pos - 2, y_pos + gheight * spacing / y_minor_axis - 5,
-                    String((Y1Max - (float)(Y1Max - Y1Min) / y_minor_axis * spacing + 0.01), 0));
-                    // +0.01 prevents -0.00 occurring
-            }
-        }
-    }
-    for (int i = 0; i <= 3; i++) {
-        gfx->drawString(5 + x_pos + gwidth / 3 * i, y_pos + gheight + 3, String(12*i)+"h");
-    }
-    //gfx->drawString(x_pos+gwidth/2+12,y_pos+gheight+5,"Days");
-}
-//#########################################################################################

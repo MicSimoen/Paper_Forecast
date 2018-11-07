@@ -23,8 +23,10 @@
 #include "settings.h"
 #include "utils.h"
 #include "Forecast_record_type.h"
+#include "OpenWeatherMapForecast.h"
+#include "OpenWeatherMapCurrent.h"
 #include "draw_manager.h"
-#include <ArduinoJson.h>       // https://github.com/bblanchon/ArduinoJson NOTE: *** MUST BE Version-6 or above ***
+//#include <ArduinoJson.h>       // https://github.com/bblanchon/ArduinoJson NOTE: *** MUST BE Version-6 or above ***
 #include <ESP8266WiFi.h>       // Built-in
 //#include "time.h"              // Built-in
 #include <SPI.h>               // Built-in
@@ -39,7 +41,7 @@ int    Sunrise, Sunset;
 
 //################ PROGRAM VARIABLES and OBJECTS ################
 
-Forecast_record_type  WxConditions[1];
+Forecast_record_type  WxConditions;
 Forecast_record_type  WxForecast[MAX_READINGS];
 
 float pressure_readings[MAX_READINGS]    = {0};
@@ -47,6 +49,10 @@ float temperature_readings[MAX_READINGS] = {0};
 float rain_readings[MAX_READINGS]        = {0};
 
 WiFiClient client; // wifi client object
+
+// initiate the client
+OpenWeatherMapForecast forecast_client;
+OpenWeatherMapCurrent current_client;
 
 //#########################################################################################
 void begin_sleep(){
@@ -57,89 +63,9 @@ void begin_sleep(){
 }
 //#########################################################################################
 void Display_Weather(draw_manager *Draw_Manager) {              // 4.2" e-paper display is 400x300 resolution
+  Serial.println("Drawing weather to buffer");
   Draw_Manager->Draw_Heading_Section(Day_time_str, time_str);             // Top line of the display
-  Draw_Manager->Draw_Weather(WxConditions, WxForecast);
-  // Draw_Manager->Draw_Main_Weather_Section(170, 70, WxConditions); // Centre section of display for Location, temperature, Weather report, current Wx Symbol and wind direction
-  // Draw_Manager->Draw_Forecast_Section(230, 18,
-  //  pressure_readings, rain_readings, temperature_readings, WxForecast);     // 3hr forecast boxes
-  // Draw_Manager->Draw_Astronomy_Section(230, 20, WxConditions);    // Astronomy section Sun rise/set, Moon phase and Moon icon
-}
-//#########################################################################################
-// Problems with stucturing JSON decodes, see here: https://arduinojson.org/assistant/
-bool DecodeWeather(Stream &json_stream, String Type) {
-  Serial.print("Creating object and ");
-  DynamicJsonDocument doc(5*1024);
-  DeserializationError error = deserializeJson(doc, json_stream);
-  if (error) {
-    Serial.print(F("deserializeJson() failed: "));
-    Serial.println(error.c_str());
-    return false;
-  }
-  // Extract values
-  JsonObject root = doc.as<JsonObject>();
-  Serial.println("decoding " + Type + " data");
-  if (Type == "weather") {
-    // All Serial.println statements are for diagnostic purposes and not required, remove if not needed 
-    WxConditions[0].lon         = root["coord"]["lon"].as<float>();              // Serial.println(WxConditions[0].lon);
-    WxConditions[0].lat         = root["coord"]["lat"].as<float>();              // Serial.println(WxConditions[0].lat);
-    WxConditions[0].Main0       = root["weather"][0]["main"].as<char*>();        // Serial.println(WxConditions[0].Main0);
-    WxConditions[0].Forecast0   = root["weather"][0]["description"].as<char*>(); // Serial.println(WxConditions[0].Forecast0);
-    WxConditions[0].Icon        = root["weather"][0]["icon"].as<char*>();        // Serial.println(WxConditions[0].Icon);
-    WxConditions[0].Forecast1   = root["weather"][1]["main"].as<char*>();        // Serial.println(WxConditions[0].Forecast1);
-    WxConditions[0].Forecast2   = root["weather"][2]["main"].as<char*>();        // Serial.println(WxConditions[0].Forecast2);
-    WxConditions[0].Temperature = root["main"]["temp"].as<float>();              // Serial.println(WxConditions[0].Temperature);
-    WxConditions[0].Pressure    = root["main"]["pressure"].as<float>();          // Serial.println(WxConditions[0].Pressure);
-    WxConditions[0].Humidity    = root["main"]["humidity"].as<float>();          // Serial.println(WxConditions[0].Humidity);
-    WxConditions[0].Low         = root["main"]["temp_min"].as<float>();          // Serial.println(WxConditions[0].Low);
-    WxConditions[0].High        = root["main"]["temp_max"].as<float>();          // Serial.println(WxConditions[0].High);
-    WxConditions[0].Windspeed   = root["wind"]["speed"].as<float>();             // Serial.println(WxConditions[0].Windspeed);
-    WxConditions[0].Winddir     = root["wind"]["deg"].as<float>();               // Serial.println(WxConditions[0].Winddir);
-    WxConditions[0].Cloudcover  = root["clouds"]["all"].as<int>();               // Serial.println(WxConditions[0].Cloudcover); // in % of cloud cover
-    WxConditions[0].Rainfall    = root["rain"]["3h"].as<float>();                // Serial.println(WxConditions[0].Rainfall);   // in mm of rain
-    WxConditions[0].Snowfall    = root["snow"]["3h"].as<float>();                // Serial.println(WxConditions[0].Snowfall);   // in mm of snow
-    WxConditions[0].Visibility  = root["visibility"].as<int>();                  // Serial.println(WxConditions[0].Visibility); // in metres
-    WxConditions[0].Country     = root["sys"]["country"].as<char*>();            // Serial.println(WxConditions[0].Country);
-    WxConditions[0].Sunrise     = root["sys"]["sunrise"].as<int>();              // Serial.println(WxConditions[0].Sunrise);
-    WxConditions[0].Sunset      = root["sys"]["sunset"].as<int>();               // Serial.println(WxConditions[0].Sunset);
-  }
-  if (Type == "forecast") {
-    //Serial.println(json);
-    const char* cod                 = root["cod"]; // "200"
-    float message                   = root["message"]; 
-    int cnt                         = root["cnt"]; 
-    JsonArray list                 = root["list"];
-    // Serial.print("\nReceiving Forecast period - "); //------------------------------------------------
-    for (byte r=0; r < MAX_READINGS; r++) {
-      // Serial.println("\nPeriod-"+String(r)+"--------------"); 
-      WxForecast[r].Dt                = list[r]["dt"].as<char*>(); 
-      WxForecast[r].Temperature       = list[r]["main"]["temp"].as<float>();              // Serial.println(WxForecast[r].Temperature);
-      WxForecast[r].Low               = list[r]["main"]["temp_min"].as<float>();          // Serial.println(WxForecast[r].Low);
-      WxForecast[r].High              = list[r]["main"]["temp_max"].as<float>();          // Serial.println(WxForecast[r].High);
-      WxForecast[r].Pressure          = list[r]["main"]["pressure"].as<float>();          // Serial.println(WxForecast[r].Pressure);
-      WxForecast[r].Humidity          = list[r]["main"]["humidity"].as<float>();          // Serial.println(WxForecast[r].Humidity);
-      WxForecast[r].Forecast0         = list[r]["weather"][0]["main"].as<char*>();        // Serial.println(WxForecast[r].Forecast0);
-      WxForecast[r].Forecast0         = list[r]["weather"][1]["main"].as<char*>();        // Serial.println(WxForecast[r].Forecast1);
-      WxForecast[r].Forecast0         = list[r]["weather"][2]["main"].as<char*>();        // Serial.println(WxForecast[r].Forecast2);
-      WxForecast[r].Description       = list[r]["weather"][0]["description"].as<char*>(); // Serial.println(WxForecast[r].Description);
-      WxForecast[r].Icon              = list[r]["weather"][0]["icon"].as<char*>();        // Serial.println(WxForecast[r].Icon);
-      WxForecast[r].Cloudcover        = list[r]["clouds"]["all"].as<int>();               // Serial.println(WxForecast[0].Cloudcover); // in % of cloud cover
-      WxForecast[r].Windspeed         = list[r]["wind"]["speed"].as<float>();             // Serial.println(WxForecast[r].Windspeed);
-      WxForecast[r].Winddir           = list[r]["wind"]["deg"].as<float>();               // Serial.println(WxForecast[r].Winddir);
-      WxForecast[r].Rainfall          = list[r]["rain"]["3h"].as<float>();                // Serial.println(WxForecast[r].Rainfall);
-      WxForecast[r].Snowfall          = list[r]["snow"]["3h"].as<float>();                // Serial.println(WxForecast[r].Snowfall);
-      WxForecast[r].Period            = list[r]["dt_txt"].as<char*>();                    // Serial.println(WxForecast[r].Period);
-    }
-    //------------------------------------------
-    float pressure_trend = WxForecast[0].Pressure - WxForecast[1].Pressure; // Measure pressure slope between ~now and later
-    pressure_trend = ((int)(pressure_trend * 10)) / 10.0; // Remove any small variations less than 0.1
-    WxConditions[0].Trend = "0";
-    if (pressure_trend > 0)  WxConditions[0].Trend = "+";
-    if (pressure_trend < 0)  WxConditions[0].Trend = "-";
-    if (pressure_trend == 0) WxConditions[0].Trend = "0";
-
-    if (UNITS == "I") utils::Convert_Readings_to_Imperial(WxConditions, WxForecast);
-  }
-  return true;
+  Draw_Manager->Draw_Weather(&WxConditions, WxForecast);
 }
 //#########################################################################################
 int StartWiFi() {
@@ -156,7 +82,9 @@ int StartWiFi() {
     }
     connAttempts++;
   }
-  Serial.println("\nWiFi connected at: " + String(WiFi.localIP()));
+  IPAddress ip = WiFi.localIP();
+  String ip_str  =String(ip[0]) + '.' + String(ip[1]) + '.' + String(ip[2]) + '.' + String(ip[3]);
+  Serial.println("\nWiFi connected at: " + ip_str);
   return 1;
 }
 //#########################################################################################
@@ -166,70 +94,32 @@ void StopWiFi() {
   wifisection    = millis() - wifisection;
 }
 //#########################################################################################
-bool obtain_wx_data(String RequestType) {
-  rxtext = "";
-  String units = (UNITS == "M"?"metric":"imperial");
-  client.stop(); // close connection before sending a new request
-  if (client.connect(server, 80)) { // if the connection succeeds
-    Serial.println("Connecting to OpenWeatherMaps...");
-    // send the HTTP PUT request:
-    if (RequestType == "weather")
-      client.println("GET /data/2.5/" + RequestType + "?q=" + CITY + "," + COUNTRY + "&APPID=" + 
-      apikey + "&mode=json&units="+units+"&lang="+LANGUAGE+" HTTP/1.1");
-    else
-      client.println("GET /data/2.5/" + RequestType + "?q=" + CITY + "," + COUNTRY + "&APPID=" + 
-      apikey + "&mode=json&units="+units+"&lang="+LANGUAGE+"&cnt=" + MAX_READINGS + " HTTP/1.1");
-    client.println("Host: api.openweathermap.org");
-    client.println("User-Agent: ESP OWM Receiver/1.1");
-    client.println("Connection: close");
-    client.println();
-    // Check HTTP status
-    char status[32] = {0};
-    client.readBytesUntil('\r', status, sizeof(status));
-    if (strcmp(status, "HTTP/1.1 200 OK") != 0) {
-      Serial.print(F("Unexpected response: "));
-      Serial.println(status);
-      return 0;
-    }
-    // Skip HTTP headers
-    char endOfHeaders[] = "\r\n\r\n";
-    if (!client.find(endOfHeaders)) {
-      Serial.println(F("Invalid response"));
-      return 0;
-    }
-    DecodeWeather(client, RequestType);
-    client.stop();
-    return true;
-  }
-  else
-  { // if no connection was made
-    Serial.println("connection failed");
-    return false;
-  }
-  return true;
-}
-//#########################################################################################
 void setup() {
   Serial.begin(115200);
   Serial.println("\r\nWaking up");
+
   StartWiFi();
   utils::SetupTime();
   utils::UpdateLocalTime(Day_time_str, time_str);
   draw_manager Draw_Manager(SCREEN_WIDTH, SCREEN_HEIGHT, BITS_PER_PIXEL, PALETTE);
-  bool Received_WxData_OK = false;
-  Received_WxData_OK = (obtain_wx_data("weather") && obtain_wx_data("forecast"));
-  // Now only refresh the screen if all the data was received OK, otherwise wait until the next timed check otherwise wait until the next timed check
-  if (Received_WxData_OK) {
-    StopWiFi(); // Reduces power consumption
-    Display_Weather(&Draw_Manager);
-    Draw_Manager.DrawBattery(SCREEN_WIDTH-80, 0);
-    Draw_Manager.Commit();
-    delay(2000);
-  }
+  
+  Serial.println("Requesting current weather conditions");
+  current_client.setMetric((UNITS == "M"));
+  current_client.setLanguage(LANGUAGE);
+  current_client.updateCurrent(&WxConditions, apikey, CITY + "," + COUNTRY);
+  
+  Serial.println("Requesting weather forecast");
+  forecast_client.setMetric((UNITS == "M"));
+  forecast_client.setLanguage(LANGUAGE);
+  forecast_client.updateForecasts(WxForecast, apikey, CITY + "," + COUNTRY, MAX_READINGS);
+ 
+  StopWiFi(); // Reduces power consumption
+  Display_Weather(&Draw_Manager);
+  // Draw_Manager.DrawBattery(SCREEN_WIDTH-80, 0);
+  Draw_Manager.Commit();
+  delay(2000);
+
   utils::UpdateLocalTime(Day_time_str, time_str);
-  //Used during development to allow easier FW flashing
-  // delay(60000);
-  /////////////////////////////////////////////////////
   begin_sleep();
 }
 //#########################################################################################
