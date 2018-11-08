@@ -46,6 +46,8 @@ void draw_manager::DrawTest(void){
 void draw_manager::Draw_Heading_Section(String Day_time_str, String time_str) {
     gfx->setColor(EPD_WHITE);
     gfx->fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    gfx->setColor(EPD_YELLOW);
+    gfx->fillRect(0, 0, SCREEN_WIDTH, 15);
     gfx->setColor(EPD_BLACK);
     gfx->setFont(ArialRoundedMTBold_14);
     gfx->setTextAlignment(TEXT_ALIGN_CENTER);
@@ -72,9 +74,9 @@ void draw_manager::Draw_Condition_Section(int x, int y, Forecast_record_type *Wx
     DisplayWXicon(x + 65, y + 90, WxConditions[0].Icon, MAIN_WEATHER_LARGE_ICON, true);
 
     int max_index = 8;
-    // if(sizeof(WxForecast) < 8) {
-    //     max_index = sizeof(WxForecast);
-    // }
+    if(MAX_READINGS < 8) {
+        max_index = MAX_READINGS;
+    }
 
     float min_temp = WxConditions[0].Temperature;
     float max_temp = WxConditions[0].Temperature;
@@ -275,9 +277,9 @@ void draw_manager::Draw_Forecast_Weather(int x,
   gfx->setFont(ArialMT_Plain_10);
   gfx->drawString(x + 28, y, String(WxForecast[index].Period.substring(11,16)));
   //gfx->drawString(x + 28, y + 50, String(WxForecast[index].High,0) + "° / " + String(WxForecast[index].Low,0) + "°");
-  String temperature = String(round(WxForecast[index].Temperature), 0);
-  String rain = String(round(10 * WxForecast[index].Rainfall)/10, 1);
-  gfx->drawString(x + 28, y + 50, temperature + "° / " + rain + (UNITS == "M" ? "mm" : "in"));
+  float temperature = round(WxForecast[index].Temperature);
+  float rain = round(10 * WxForecast[index].Rainfall)/10;
+  gfx->drawString(x + 28, y + 50, String(temperature, 0) + "° / " + String(rain, 1) + (UNITS == "M" ? "mm" : "in"));
 }
 //#########################################################################################
 void draw_manager::Draw_Astronomy_Section(int x,

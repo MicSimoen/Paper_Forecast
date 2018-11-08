@@ -78,10 +78,40 @@ int StartWiFi() {
     delay(500); Serial.print(".");
     if (connAttempts > 20) {
       WiFi.disconnect();
-      begin_sleep();
+      Serial.println("\nWifi connection failed!");
+      break;
     }
     connAttempts++;
   }
+  if (WiFi.status() != WL_CONNECTED ) {
+    connAttempts = 0;
+    Serial.print(F("Connecting to: ")); Serial.println(String(ssid2));
+    WiFi.begin(ssid2, password2);
+    while (WiFi.status() != WL_CONNECTED ) {
+      delay(500); Serial.print(".");
+      if (connAttempts > 20) {
+        WiFi.disconnect();
+        Serial.println("\nWifi connection failed!");
+        break;
+      }
+      connAttempts++;
+    }
+  }
+  if (WiFi.status() != WL_CONNECTED ) {
+    connAttempts = 0;
+    Serial.print(F("Connecting to: ")); Serial.println(String(ssid3));
+    WiFi.begin(ssid3, password3);
+    while (WiFi.status() != WL_CONNECTED ) {
+      delay(500); Serial.print(".");
+      if (connAttempts > 20) {
+        WiFi.disconnect();
+        Serial.println("\nWifi connection failed!");
+        begin_sleep();
+      }
+      connAttempts++;
+    }
+  }
+  
   IPAddress ip = WiFi.localIP();
   String ip_str  =String(ip[0]) + '.' + String(ip[1]) + '.' + String(ip[2]) + '.' + String(ip[3]);
   Serial.println("\nWiFi connected at: " + ip_str);
